@@ -420,41 +420,21 @@ copy copaw_config\config.json %USERPROFILE%\.copaw\config.json
 
 **7b. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
 
-CoPaw discovers skills from the `~/.copaw/customized_skills/` directory. Each subdirectory containing a `SKILL.md` file is automatically loaded as a skill. Copy all 8 skills there:
+CoPaw loads skills at runtime from the `default` agent's workspace directory. Copy all 8 skills into the default agent's active skills folder:
 
 ```cmd
-rem Create the customized_skills directory
-mkdir %USERPROFILE%\.copaw\customized_skills 2>nul
+rem Copy skills to the default agent's workspace
+mkdir %USERPROFILE%\.copaw\workspaces\default\skills 2>nul
 
-rem Copy all skills
-xcopy /E /I skills\tech_sensing %USERPROFILE%\.copaw\customized_skills\tech_sensing
-xcopy /E /I skills\pptx_gen %USERPROFILE%\.copaw\customized_skills\pptx_gen
-xcopy /E /I skills\competitive_intel %USERPROFILE%\.copaw\customized_skills\competitive_intel
-xcopy /E /I skills\patent_monitor %USERPROFILE%\.copaw\customized_skills\patent_monitor
-xcopy /E /I skills\regulation_tracker %USERPROFILE%\.copaw\customized_skills\regulation_tracker
-xcopy /E /I skills\talent_radar %USERPROFILE%\.copaw\customized_skills\talent_radar
-xcopy /E /I skills\executive_brief %USERPROFILE%\.copaw\customized_skills\executive_brief
-xcopy /E /I skills\email_digest %USERPROFILE%\.copaw\customized_skills\email_digest
+xcopy /E /I skills\tech_sensing %USERPROFILE%\.copaw\workspaces\default\skills\tech_sensing
+xcopy /E /I skills\pptx_gen %USERPROFILE%\.copaw\workspaces\default\skills\pptx_gen
+xcopy /E /I skills\competitive_intel %USERPROFILE%\.copaw\workspaces\default\skills\competitive_intel
+xcopy /E /I skills\patent_monitor %USERPROFILE%\.copaw\workspaces\default\skills\patent_monitor
+xcopy /E /I skills\regulation_tracker %USERPROFILE%\.copaw\workspaces\default\skills\regulation_tracker
+xcopy /E /I skills\talent_radar %USERPROFILE%\.copaw\workspaces\default\skills\talent_radar
+xcopy /E /I skills\executive_brief %USERPROFILE%\.copaw\workspaces\default\skills\executive_brief
+xcopy /E /I skills\email_digest %USERPROFILE%\.copaw\workspaces\default\skills\email_digest
 ```
-
-Alternatively, for development (so edits to skills are reflected immediately), use symlinks instead of copying:
-
-```cmd
-rem Create the customized_skills directory
-mkdir %USERPROFILE%\.copaw\customized_skills 2>nul
-
-rem Symlink all skills
-mklink /D %USERPROFILE%\.copaw\customized_skills\tech_sensing %CD%\skills\tech_sensing
-mklink /D %USERPROFILE%\.copaw\customized_skills\pptx_gen %CD%\skills\pptx_gen
-mklink /D %USERPROFILE%\.copaw\customized_skills\competitive_intel %CD%\skills\competitive_intel
-mklink /D %USERPROFILE%\.copaw\customized_skills\patent_monitor %CD%\skills\patent_monitor
-mklink /D %USERPROFILE%\.copaw\customized_skills\regulation_tracker %CD%\skills\regulation_tracker
-mklink /D %USERPROFILE%\.copaw\customized_skills\talent_radar %CD%\skills\talent_radar
-mklink /D %USERPROFILE%\.copaw\customized_skills\executive_brief %CD%\skills\executive_brief
-mklink /D %USERPROFILE%\.copaw\customized_skills\email_digest %CD%\skills\email_digest
-```
-
-**Note:** Creating symlinks on Windows may require running Command Prompt as Administrator, or enabling Developer Mode (Settings → Update & Security → For developers → Developer Mode).
 
 **7c. Verify skills are loaded:**
 
@@ -600,36 +580,20 @@ cp copaw_config/config.json ~/.copaw/config.json
 
 **7b. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
 
-CoPaw discovers skills from the `~/.copaw/customized_skills/` directory. Each subdirectory containing a `SKILL.md` file is automatically loaded as a skill. Copy all 8 skills there:
+CoPaw loads skills at runtime from the `default` agent's workspace directory. Copy all 8 skills into the default agent's active skills folder:
 
 ```bash
-# Create the customized_skills directory
-mkdir -p ~/.copaw/customized_skills
+# Copy skills to the default agent's workspace
+mkdir -p ~/.copaw/workspaces/default/skills
 
-# Copy all skills
-cp -r skills/tech_sensing ~/.copaw/customized_skills/
-cp -r skills/pptx_gen ~/.copaw/customized_skills/
-cp -r skills/competitive_intel ~/.copaw/customized_skills/
-cp -r skills/patent_monitor ~/.copaw/customized_skills/
-cp -r skills/regulation_tracker ~/.copaw/customized_skills/
-cp -r skills/talent_radar ~/.copaw/customized_skills/
-cp -r skills/executive_brief ~/.copaw/customized_skills/
-cp -r skills/email_digest ~/.copaw/customized_skills/
-```
-
-Alternatively, for development (so edits to skills are reflected immediately), use symlinks instead of copying:
-
-```bash
-mkdir -p ~/.copaw/customized_skills
-
-ln -s "$(pwd)/skills/tech_sensing" ~/.copaw/customized_skills/tech_sensing
-ln -s "$(pwd)/skills/pptx_gen" ~/.copaw/customized_skills/pptx_gen
-ln -s "$(pwd)/skills/competitive_intel" ~/.copaw/customized_skills/competitive_intel
-ln -s "$(pwd)/skills/patent_monitor" ~/.copaw/customized_skills/patent_monitor
-ln -s "$(pwd)/skills/regulation_tracker" ~/.copaw/customized_skills/regulation_tracker
-ln -s "$(pwd)/skills/talent_radar" ~/.copaw/customized_skills/talent_radar
-ln -s "$(pwd)/skills/executive_brief" ~/.copaw/customized_skills/executive_brief
-ln -s "$(pwd)/skills/email_digest" ~/.copaw/customized_skills/email_digest
+cp -r skills/tech_sensing ~/.copaw/workspaces/default/skills/
+cp -r skills/pptx_gen ~/.copaw/workspaces/default/skills/
+cp -r skills/competitive_intel ~/.copaw/workspaces/default/skills/
+cp -r skills/patent_monitor ~/.copaw/workspaces/default/skills/
+cp -r skills/regulation_tracker ~/.copaw/workspaces/default/skills/
+cp -r skills/talent_radar ~/.copaw/workspaces/default/skills/
+cp -r skills/executive_brief ~/.copaw/workspaces/default/skills/
+cp -r skills/email_digest ~/.copaw/workspaces/default/skills/
 ```
 
 **7c. Verify skills are loaded:**
@@ -1349,34 +1313,34 @@ Or re-run `copaw init` and select **Ollama** when prompted for the LLM provider.
 
 ### Skills don't appear in the CoPaw Web UI Skills tab
 
-If the Skills panel in the Web UI is empty, the skills were not placed in CoPaw's `customized_skills` directory. CoPaw auto-discovers skills by scanning `~/.copaw/customized_skills/` for subdirectories containing a `SKILL.md` file.
+If the Skills panel in the Web UI is empty, the skills were not placed in the default agent's workspace. CoPaw loads skills from `~/.copaw/workspaces/default/skills/` — each subdirectory must contain a `SKILL.md` file.
 
 **Fix:** Copy the skills to the correct location (run from the project root directory):
 
 **Windows:**
 ```cmd
-mkdir %USERPROFILE%\.copaw\customized_skills 2>nul
-xcopy /E /I skills\tech_sensing %USERPROFILE%\.copaw\customized_skills\tech_sensing
-xcopy /E /I skills\pptx_gen %USERPROFILE%\.copaw\customized_skills\pptx_gen
-xcopy /E /I skills\competitive_intel %USERPROFILE%\.copaw\customized_skills\competitive_intel
-xcopy /E /I skills\patent_monitor %USERPROFILE%\.copaw\customized_skills\patent_monitor
-xcopy /E /I skills\regulation_tracker %USERPROFILE%\.copaw\customized_skills\regulation_tracker
-xcopy /E /I skills\talent_radar %USERPROFILE%\.copaw\customized_skills\talent_radar
-xcopy /E /I skills\executive_brief %USERPROFILE%\.copaw\customized_skills\executive_brief
-xcopy /E /I skills\email_digest %USERPROFILE%\.copaw\customized_skills\email_digest
+mkdir %USERPROFILE%\.copaw\workspaces\default\skills 2>nul
+xcopy /E /I skills\tech_sensing %USERPROFILE%\.copaw\workspaces\default\skills\tech_sensing
+xcopy /E /I skills\pptx_gen %USERPROFILE%\.copaw\workspaces\default\skills\pptx_gen
+xcopy /E /I skills\competitive_intel %USERPROFILE%\.copaw\workspaces\default\skills\competitive_intel
+xcopy /E /I skills\patent_monitor %USERPROFILE%\.copaw\workspaces\default\skills\patent_monitor
+xcopy /E /I skills\regulation_tracker %USERPROFILE%\.copaw\workspaces\default\skills\regulation_tracker
+xcopy /E /I skills\talent_radar %USERPROFILE%\.copaw\workspaces\default\skills\talent_radar
+xcopy /E /I skills\executive_brief %USERPROFILE%\.copaw\workspaces\default\skills\executive_brief
+xcopy /E /I skills\email_digest %USERPROFILE%\.copaw\workspaces\default\skills\email_digest
 ```
 
 **Ubuntu:**
 ```bash
-mkdir -p ~/.copaw/customized_skills
-cp -r skills/tech_sensing ~/.copaw/customized_skills/
-cp -r skills/pptx_gen ~/.copaw/customized_skills/
-cp -r skills/competitive_intel ~/.copaw/customized_skills/
-cp -r skills/patent_monitor ~/.copaw/customized_skills/
-cp -r skills/regulation_tracker ~/.copaw/customized_skills/
-cp -r skills/talent_radar ~/.copaw/customized_skills/
-cp -r skills/executive_brief ~/.copaw/customized_skills/
-cp -r skills/email_digest ~/.copaw/customized_skills/
+mkdir -p ~/.copaw/workspaces/default/skills
+cp -r skills/tech_sensing ~/.copaw/workspaces/default/skills/
+cp -r skills/pptx_gen ~/.copaw/workspaces/default/skills/
+cp -r skills/competitive_intel ~/.copaw/workspaces/default/skills/
+cp -r skills/patent_monitor ~/.copaw/workspaces/default/skills/
+cp -r skills/regulation_tracker ~/.copaw/workspaces/default/skills/
+cp -r skills/talent_radar ~/.copaw/workspaces/default/skills/
+cp -r skills/executive_brief ~/.copaw/workspaces/default/skills/
+cp -r skills/email_digest ~/.copaw/workspaces/default/skills/
 ```
 
 Then restart `copaw app`. Verify with `copaw skills list`.
