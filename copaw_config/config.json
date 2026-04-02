@@ -1,0 +1,40 @@
+{
+  "agents": [
+    {
+      "id": "analyst",
+      "name": "Enterprise Analyst",
+      "provider_id": "fallback",
+      "model_id": "gpt-oss-20b",
+      "skills": {
+        "tech_sensing": {"enabled": true, "channels": ["*"]},
+        "competitive_intel": {"enabled": true, "channels": ["*"]},
+        "patent_monitor": {"enabled": true, "channels": ["*"]},
+        "regulation_tracker": {"enabled": true, "channels": ["*"]},
+        "talent_radar": {"enabled": true, "channels": ["*"]}
+      },
+      "running_params": {
+        "retry_limit": 3,
+        "rate_limit": {"max_calls": 10, "window_seconds": 60}
+      }
+    },
+    {
+      "id": "reporter",
+      "name": "Report Generator",
+      "provider_id": "fallback",
+      "model_id": "gpt-oss-20b",
+      "skills": {
+        "pptx_gen": {"enabled": true, "channels": ["*"]},
+        "executive_brief": {"enabled": true, "channels": ["*"]}
+      }
+    },
+    {
+      "id": "admin",
+      "name": "Platform Admin",
+      "provider_id": "fallback",
+      "model_id": "gpt-oss-20b",
+      "skills": {
+        "email_digest": {"enabled": true, "channels": ["*"]}
+      }
+    }
+  ]
+}
