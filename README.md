@@ -14,19 +14,20 @@ A multi-skill enterprise intelligence platform powered by [CoPaw](https://github
 6. [Getting Your API Keys](#getting-your-api-keys)
 7. [Configuration](#configuration)
 8. [Running the Platform](#running-the-platform)
-9. [Using the Skills](#using-the-skills)
-10. [Running via REST API](#running-via-rest-api)
-11. [Running via Docker](#running-via-docker)
-12. [Running Tests](#running-tests)
-13. [Project Structure](#project-structure)
-14. [Troubleshooting](#troubleshooting)
-15. [FAQ](#faq)
+9. [Using the Web UI (Chatbot Interface)](#using-the-web-ui-chatbot-interface)
+10. [Using the Skills](#using-the-skills)
+11. [Running via REST API](#running-via-rest-api)
+12. [Running via Docker](#running-via-docker)
+13. [Running Tests](#running-tests)
+14. [Project Structure](#project-structure)
+15. [Troubleshooting](#troubleshooting)
+16. [FAQ](#faq)
 
 ---
 
 ## What Does This Platform Do?
 
-CoPawClaw is an AI-powered enterprise intelligence system. You talk to it in plain English (via a terminal, Discord, Slack, or Telegram), and it performs complex research tasks for you using 8 specialized skills:
+CoPawClaw is an AI-powered enterprise intelligence system. You talk to it in plain English — via the **browser-based chatbot UI**, terminal, Discord, Slack, or Telegram — and it performs complex research tasks for you using 8 specialized skills:
 
 | # | Skill | What It Does |
 |---|-------|-------------|
@@ -60,31 +61,32 @@ Agent: "Deck saved to output/deck.pptx"
 ┌─────────────────────────────────────────────────────┐
 │                  You (the User)                      │
 │         Talk in plain English via any channel         │
-└──────────────┬──────────────────────────┬────────────┘
-               │                          │
-      ┌────────▼────────┐       ┌─────────▼─────────┐
-      │  CoPaw CLI Chat │       │  Discord / Slack / │
-      │  (Terminal)      │       │  Telegram Bot      │
-      └────────┬────────┘       └─────────┬─────────┘
-               │                          │
-      ┌────────▼──────────────────────────▼────────────┐
-      │              CoPaw Multi-Agent System            │
-      │                                                  │
-      │  ┌─────────────┐ ┌───────────┐ ┌────────────┐  │
-      │  │  Analyst     │ │  Reporter │ │   Admin    │  │
-      │  │  5 skills    │ │  2 skills │ │  1 skill   │  │
-      │  └──────┬──────┘ └─────┬─────┘ └─────┬──────┘  │
-      └─────────┼──────────────┼──────────────┼─────────┘
-                │              │              │
-      ┌─────────▼──────────────▼──────────────▼─────────┐
-      │         enterprise_skills_lib (Shared Library)    │
-      │   LLM Client │ Pydantic Schemas │ Sensing Pipeline│
-      └──────────────────────┬───────────────────────────┘
-                             │
-      ┌──────────────────────▼───────────────────────────┐
-      │        FallbackProvider (LLM Fallback Chain)      │
-      │   GPU Server → Gemini (6 keys) → OpenAI           │
-      └──────────────────────────────────────────────────┘
+└───────┬──────────────┬──────────────────┬────────────┘
+        │              │                  │
+┌───────▼───────┐ ┌────▼────────┐ ┌──────▼──────────┐
+│  CoPaw Web UI │ │ CoPaw CLI   │ │ Discord / Slack /│
+│  (Browser     │ │ Chat        │ │ Telegram Bot     │
+│   Chatbot)    │ │ (Terminal)  │ │                  │
+└───────┬───────┘ └────┬────────┘ └──────┬──────────┘
+        │              │                  │
+┌───────▼──────────────▼──────────────────▼────────────┐
+│              CoPaw Multi-Agent System                 │
+│                                                       │
+│  ┌─────────────┐ ┌───────────┐ ┌────────────┐       │
+│  │  Analyst     │ │  Reporter │ │   Admin    │       │
+│  │  5 skills    │ │  2 skills │ │  1 skill   │       │
+│  └──────┬──────┘ └─────┬─────┘ └─────┬──────┘       │
+└─────────┼──────────────┼──────────────┼──────────────┘
+          │              │              │
+┌─────────▼──────────────▼──────────────▼──────────────┐
+│         enterprise_skills_lib (Shared Library)        │
+│   LLM Client │ Pydantic Schemas │ Sensing Pipeline    │
+└──────────────────────┬───────────────────────────────┘
+                       │
+┌──────────────────────▼───────────────────────────────┐
+│        FallbackProvider (LLM Fallback Chain)          │
+│   GPU Server → Gemini (6 keys) → OpenAI               │
+└──────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -592,6 +594,137 @@ The API is now running at **http://localhost:8000**. Open http://localhost:8000/
 
 ---
 
+## Using the Web UI (Chatbot Interface)
+
+CoPaw includes a **built-in browser-based chatbot interface** — a full web app where you type messages and your agents respond in real time, just like ChatGPT or any other chat application. No terminal needed.
+
+### Starting the Web UI
+
+**Windows:**
+```cmd
+venv\Scripts\activate
+copaw app --host 127.0.0.1 --port 8088
+```
+
+**Ubuntu:**
+```bash
+source venv/bin/activate
+copaw app --host 127.0.0.1 --port 8088
+```
+
+Now open your browser and go to:
+
+```
+http://127.0.0.1:8088
+```
+
+You'll see the CoPaw chatbot interface with a chat input box at the bottom, a sidebar for managing chat sessions, and your agents ready to respond.
+
+### What You'll See in the Web UI
+
+The web interface has several sections:
+
+- **Chat Area** — The main area where you type messages and see agent responses streamed in real time
+- **Session Sidebar** — Create, switch between, rename, and delete chat sessions (conversations are saved automatically)
+- **Agent Panel** — View and manage which agents (Analyst, Reporter, Admin) are active
+- **Skills Panel** — Enable or disable individual skills from the UI without editing config files
+- **Settings Page** — Configure providers, API keys, and other options directly from the browser
+
+### Having a Conversation
+
+Once the Web UI is open, just type your request in plain English. The agent automatically determines which skill to use:
+
+```
+You: What are the latest AI trends this week?
+Agent: [Runs Tech Sensing pipeline — scanning RSS, GitHub, arXiv, HackerNews, DuckDuckGo...]
+Agent: Here's your Technology Radar report. Key highlights:
+       - GPT-5 moved from Assess to Trial...
+       - Agent frameworks are surging on GitHub...
+
+You: Now track what OpenAI and Anthropic are doing
+Agent: [Runs Competitive Intelligence skill...]
+Agent: Competitive analysis complete. Key findings:
+       - OpenAI launched ...
+       - Anthropic raised ...
+
+You: Make a presentation from the sensing report
+Agent: [Runs PPTX Generation skill...]
+Agent: Deck saved. Download link: output/deck.pptx
+
+You: Give me an executive summary of everything
+Agent: [Runs Executive Brief — synthesizes all skill outputs...]
+Agent: Executive Brief ready. 3 critical items require attention...
+```
+
+**Responses stream in real time** — you see the agent's reply appear word by word as it generates, just like a modern chatbot.
+
+### Chat Sessions
+
+- **Create a new session:** Click the "+" button in the sidebar to start a fresh conversation
+- **Switch sessions:** Click any previous session in the sidebar to resume it
+- **Rename a session:** Click the edit icon next to a session name
+- **Delete a session:** Click the delete icon next to a session (or use batch delete)
+- **All sessions are saved automatically** — close the browser and come back later, your conversations are still there (stored in `~/.copaw/chats/`)
+
+### Managing Skills from the Web UI
+
+You don't need to edit config files to enable/disable skills. From the Web UI:
+
+1. Navigate to the **Skills** panel
+2. You'll see all 8 skills listed with toggle switches
+3. Click a toggle to enable or disable a skill
+4. Changes take effect immediately — no restart needed
+
+You can also:
+- **Install new skills** from the CoPaw Skill Hub (if available)
+- **Create custom skills** directly from the UI
+- **View skill details** — description, required parameters, and scripts
+
+### Configuring Providers from the Web UI
+
+Instead of editing `.env` files manually, you can configure LLM providers in the browser:
+
+1. Go to the **Settings** page
+2. Navigate to **Providers**
+3. Add or update your API keys (Gemini, OpenAI, etc.)
+4. Changes are saved and applied without restarting the server
+
+### Accessing the Web UI from Another Device
+
+To access the Web UI from another computer or phone on the same network:
+
+**Windows:**
+```cmd
+copaw app --host 0.0.0.0 --port 8088
+```
+
+**Ubuntu:**
+```bash
+copaw app --host 0.0.0.0 --port 8088
+```
+
+Then on the other device, open a browser and go to:
+```
+http://<your-computer-ip>:8088
+```
+
+To find your computer's IP address:
+- **Windows:** Open Command Prompt and run `ipconfig` — look for "IPv4 Address" (e.g., `192.168.1.100`)
+- **Ubuntu:** Run `hostname -I` (e.g., `192.168.1.100`)
+
+So the URL would be something like: `http://192.168.1.100:8088`
+
+### Web UI vs CLI vs REST API — Which to Use?
+
+| Method | Best For | How |
+|--------|----------|-----|
+| **Web UI** (Recommended) | Day-to-day use, non-technical users, visual chat experience | `copaw app` → open browser |
+| **CLI Chat** | Quick terminal use, developers who prefer the command line | `copaw chat --agent analyst` |
+| **REST API** | Building your own app, automation, programmatic access | `uvicorn api.main:app` → HTTP calls |
+| **Direct Scripts** | One-off runs, CI/CD pipelines, cron jobs | `python skills/.../script.py` |
+
+---
+
 ## Running via REST API
 
 Once the API server is running (see Method 3 above), you can use these endpoints:
@@ -951,6 +1084,16 @@ Make sure you installed the dev dependencies:
 ```bash
 pip install -e ".[dev]"
 ```
+
+### Web UI shows a blank page or won't load
+
+1. Make sure the server is running — you should see log output in the terminal where you ran `copaw app`
+2. Check the URL: it should be `http://127.0.0.1:8088` (not `https://`)
+3. Try a hard refresh: `Ctrl + Shift + R` (Windows) or `Cmd + Shift + R` (Mac)
+4. Check if another process is using port 8088:
+   - **Windows:** `netstat -ano | findstr :8088`
+   - **Ubuntu:** `lsof -i :8088`
+5. Try a different port: `copaw app --port 9090` then open `http://127.0.0.1:9090`
 
 ### "Rate limit exceeded" errors
 
