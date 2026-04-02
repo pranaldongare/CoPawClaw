@@ -28,6 +28,7 @@ dependencies = [
 
     # Async
     "aiofiles>=23.0.0",
+    "async-timeout>=4.0.0",
 
     # PPTX
     "python-pptx>=0.6.23",

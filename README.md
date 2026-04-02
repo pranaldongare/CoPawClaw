@@ -408,16 +408,60 @@ pip install copaw
 copaw init
 ```
 
-This creates a `~/.copaw/` folder with CoPaw's configuration.
+During `copaw init`, when it asks for an LLM provider, select any option and enter a placeholder API key (e.g., `sk-placeholder`). This does not matter because CoPawClaw uses its own custom FallbackProvider that routes all LLM calls to your local GPU server.
 
-Now copy our configuration files into CoPaw's config directory:
+This creates a `%USERPROFILE%\.copaw\` folder with CoPaw's default configuration. Now we need to replace it with our custom configuration.
+
+**7a. Copy the agent configuration** (defines the 3 agents: Analyst, Reporter, Admin):
 
 ```cmd
 copy copaw_config\config.json %USERPROFILE%\.copaw\config.json
+```
 
+**7b. Register the custom FallbackProvider** (routes LLM calls to your local GPU instead of cloud APIs):
+
+```cmd
 mkdir %USERPROFILE%\.copaw\.secret\providers\custom 2>nul
 copy copaw_config\providers\fallback.json %USERPROFILE%\.copaw\.secret\providers\custom\fallback.json
 ```
+
+**7c. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
+
+```cmd
+copaw skill install skills\tech_sensing
+copaw skill install skills\pptx_gen
+copaw skill install skills\competitive_intel
+copaw skill install skills\patent_monitor
+copaw skill install skills\regulation_tracker
+copaw skill install skills\talent_radar
+copaw skill install skills\executive_brief
+copaw skill install skills\email_digest
+```
+
+If `copaw skill install` is not available in your version of CoPaw, use symlinks instead:
+
+```cmd
+rem Create workspace directories for each agent
+mkdir %USERPROFILE%\.copaw\workspaces\analyst\skills 2>nul
+mkdir %USERPROFILE%\.copaw\workspaces\reporter\skills 2>nul
+mkdir %USERPROFILE%\.copaw\workspaces\admin\skills 2>nul
+
+rem Symlink Analyst skills
+mklink /D %USERPROFILE%\.copaw\workspaces\analyst\skills\tech_sensing %CD%\skills\tech_sensing
+mklink /D %USERPROFILE%\.copaw\workspaces\analyst\skills\competitive_intel %CD%\skills\competitive_intel
+mklink /D %USERPROFILE%\.copaw\workspaces\analyst\skills\patent_monitor %CD%\skills\patent_monitor
+mklink /D %USERPROFILE%\.copaw\workspaces\analyst\skills\regulation_tracker %CD%\skills\regulation_tracker
+mklink /D %USERPROFILE%\.copaw\workspaces\analyst\skills\talent_radar %CD%\skills\talent_radar
+
+rem Symlink Reporter skills
+mklink /D %USERPROFILE%\.copaw\workspaces\reporter\skills\pptx_gen %CD%\skills\pptx_gen
+mklink /D %USERPROFILE%\.copaw\workspaces\reporter\skills\executive_brief %CD%\skills\executive_brief
+
+rem Symlink Admin skills
+mklink /D %USERPROFILE%\.copaw\workspaces\admin\skills\email_digest %CD%\skills\email_digest
+```
+
+**Note:** Creating symlinks on Windows may require running Command Prompt as Administrator, or enabling Developer Mode (Settings → Update & Security → For developers → Developer Mode).
 
 ### Step 8: Create data directories
 
@@ -537,13 +581,57 @@ pip install copaw
 copaw init
 ```
 
-Copy our configuration files:
+During `copaw init`, when it asks for an LLM provider, select any option and enter a placeholder API key (e.g., `sk-placeholder`). This does not matter because CoPawClaw uses its own custom FallbackProvider that routes all LLM calls to your local GPU server.
+
+This creates a `~/.copaw/` folder with CoPaw's default configuration. Now we need to replace it with our custom configuration.
+
+**7a. Copy the agent configuration** (defines the 3 agents: Analyst, Reporter, Admin):
 
 ```bash
 cp copaw_config/config.json ~/.copaw/config.json
+```
 
+**7b. Register the custom FallbackProvider** (routes LLM calls to your local GPU instead of cloud APIs):
+
+```bash
 mkdir -p ~/.copaw/.secret/providers/custom
 cp copaw_config/providers/fallback.json ~/.copaw/.secret/providers/custom/fallback.json
+```
+
+**7c. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
+
+```bash
+copaw skill install skills/tech_sensing
+copaw skill install skills/pptx_gen
+copaw skill install skills/competitive_intel
+copaw skill install skills/patent_monitor
+copaw skill install skills/regulation_tracker
+copaw skill install skills/talent_radar
+copaw skill install skills/executive_brief
+copaw skill install skills/email_digest
+```
+
+If `copaw skill install` is not available in your version of CoPaw, use symlinks instead:
+
+```bash
+# Create workspace directories for each agent
+mkdir -p ~/.copaw/workspaces/analyst/skills
+mkdir -p ~/.copaw/workspaces/reporter/skills
+mkdir -p ~/.copaw/workspaces/admin/skills
+
+# Symlink Analyst skills
+ln -s "$(pwd)/skills/tech_sensing" ~/.copaw/workspaces/analyst/skills/tech_sensing
+ln -s "$(pwd)/skills/competitive_intel" ~/.copaw/workspaces/analyst/skills/competitive_intel
+ln -s "$(pwd)/skills/patent_monitor" ~/.copaw/workspaces/analyst/skills/patent_monitor
+ln -s "$(pwd)/skills/regulation_tracker" ~/.copaw/workspaces/analyst/skills/regulation_tracker
+ln -s "$(pwd)/skills/talent_radar" ~/.copaw/workspaces/analyst/skills/talent_radar
+
+# Symlink Reporter skills
+ln -s "$(pwd)/skills/pptx_gen" ~/.copaw/workspaces/reporter/skills/pptx_gen
+ln -s "$(pwd)/skills/executive_brief" ~/.copaw/workspaces/reporter/skills/executive_brief
+
+# Symlink Admin skills
+ln -s "$(pwd)/skills/email_digest" ~/.copaw/workspaces/admin/skills/email_digest
 ```
 
 ### Step 8: Create data directories
@@ -1232,6 +1320,58 @@ CoPawClaw/
 ---
 
 ## Troubleshooting
+
+### CoPaw uses the wrong model (e.g., "gpt-5.2" from `copaw init`)
+
+The logs show `Returning global model: provider_id='openai' model='gpt-5.2'` instead of using the local GPU. This means the custom FallbackProvider was not registered properly.
+
+**Fix:** Copy the provider config to the correct location:
+
+**Windows:**
+```cmd
+mkdir %USERPROFILE%\.copaw\.secret\providers\custom 2>nul
+copy copaw_config\providers\fallback.json %USERPROFILE%\.copaw\.secret\providers\custom\fallback.json
+```
+
+**Ubuntu:**
+```bash
+mkdir -p ~/.copaw/.secret/providers/custom
+cp copaw_config/providers/fallback.json ~/.copaw/.secret/providers/custom/fallback.json
+```
+
+Then restart `copaw app` or `copaw chat`.
+
+### Skills don't appear in the CoPaw Web UI Skills tab
+
+If the Skills panel in the Web UI is empty and the `/api/skills` endpoint returns no skills, they were not installed into CoPaw's workspace.
+
+**Fix:** Install all skills (run from the project root directory):
+
+**Windows:**
+```cmd
+copaw skill install skills\tech_sensing
+copaw skill install skills\pptx_gen
+copaw skill install skills\competitive_intel
+copaw skill install skills\patent_monitor
+copaw skill install skills\regulation_tracker
+copaw skill install skills\talent_radar
+copaw skill install skills\executive_brief
+copaw skill install skills\email_digest
+```
+
+**Ubuntu:**
+```bash
+copaw skill install skills/tech_sensing
+copaw skill install skills/pptx_gen
+copaw skill install skills/competitive_intel
+copaw skill install skills/patent_monitor
+copaw skill install skills/regulation_tracker
+copaw skill install skills/talent_radar
+copaw skill install skills/executive_brief
+copaw skill install skills/email_digest
+```
+
+If `copaw skill install` is not available, use the symlink approach described in Step 7c of the setup instructions. Then restart `copaw app`.
 
 ### "ModuleNotFoundError: No module named 'enterprise_skills_lib'"
 
