@@ -1,14 +1,12 @@
 {
   "id": "fallback",
-  "name": "Enterprise Fallback (GPU->Gemini->OpenAI)",
+  "name": "Enterprise GPU-Only (Local LLM)",
   "base_url": "http://localhost:11434",
   "api_key": "managed-internally",
   "chat_model": "enterprise_skills_lib.copaw_provider.FallbackProvider",
-  "is_local": false,
+  "is_local": true,
   "is_custom": true,
   "models": [
-    {"id": "gpt-oss-20b", "name": "Main GPU Model"},
-    {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (fallback)"},
-    {"id": "gpt-4o-mini", "name": "OpenAI GPT-4o Mini (fallback)"}
+    {"id": "gpt-oss-20b", "name": "Main GPU Model (local)"}
   ]
 }

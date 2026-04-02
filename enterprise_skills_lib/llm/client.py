@@ -479,4 +479,11 @@ CRITICAL OUTPUT RULES:
 
         await asyncio.sleep(2)
 
+    gpu_only = not SWITCHES.get("FALLBACK_TO_GEMINI", True) and not SWITCHES.get("FALLBACK_TO_OPENAI", True)
+    if gpu_only:
+        raise RuntimeError(
+            f"GPU-only mode: all {MAX_RETRIES} attempts against local GPU "
+            f"server ({gpu_model} on port {port}) failed. "
+            "Ensure vLLM/Ollama is running and the model is loaded."
+        )
     raise RuntimeError("All fallback attempts failed (GPU + Gemini + OpenAI).")

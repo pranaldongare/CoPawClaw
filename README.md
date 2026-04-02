@@ -9,19 +9,20 @@ A multi-skill enterprise intelligence platform powered by [CoPaw](https://github
 1. [What Does This Platform Do?](#what-does-this-platform-do)
 2. [Architecture Overview](#architecture-overview)
 3. [Prerequisites](#prerequisites)
-4. [Setup on Windows](#setup-on-windows)
-5. [Setup on Ubuntu](#setup-on-ubuntu)
-6. [Getting Your API Keys](#getting-your-api-keys)
-7. [Configuration](#configuration)
-8. [Running the Platform](#running-the-platform)
-9. [Using the Web UI (Chatbot Interface)](#using-the-web-ui-chatbot-interface)
-10. [Using the Skills](#using-the-skills)
-11. [Running via REST API](#running-via-rest-api)
-12. [Running via Docker](#running-via-docker)
-13. [Running Tests](#running-tests)
-14. [Project Structure](#project-structure)
-15. [Troubleshooting](#troubleshooting)
-16. [FAQ](#faq)
+4. [Setting Up Ollama (Local GPU Server)](#setting-up-ollama-local-gpu-server)
+5. [Setup on Windows](#setup-on-windows)
+6. [Setup on Ubuntu](#setup-on-ubuntu)
+7. [Getting Your API Keys](#getting-your-api-keys)
+8. [Configuration](#configuration)
+9. [Running the Platform](#running-the-platform)
+10. [Using the Web UI (Chatbot Interface)](#using-the-web-ui-chatbot-interface)
+11. [Using the Skills](#using-the-skills)
+12. [Running via REST API](#running-via-rest-api)
+13. [Running via Docker](#running-via-docker)
+14. [Running Tests](#running-tests)
+15. [Project Structure](#project-structure)
+16. [Troubleshooting](#troubleshooting)
+17. [FAQ](#faq)
 
 ---
 
@@ -93,17 +94,203 @@ Agent: "Deck saved to output/deck.pptx"
 
 ## Prerequisites
 
-Before you begin, you need **at least one** of the following LLM backends:
+This platform is configured for **GPU-only mode** by default — all LLM calls stay on your local machine or your organization's network. No data is sent to external cloud APIs.
 
 | Backend | Required? | Cost | Notes |
 |---------|-----------|------|-------|
-| **Google Gemini API** | Recommended | Free tier available | Easiest to start with. Get keys at [aistudio.google.com](https://aistudio.google.com/) |
-| **OpenAI API** | Optional | Pay-per-use | Fallback option. Get key at [platform.openai.com](https://platform.openai.com/) |
-| **Local GPU Server** | Optional | Free (needs GPU) | vLLM or Ollama on localhost. Needs NVIDIA GPU with 16GB+ VRAM |
+| **Ollama** (Recommended) | Yes (default) | Free | Easy to install, runs on any machine with a GPU. Supports 100+ open-source models |
+| **vLLM** | Alternative to Ollama | Free | Higher throughput for production. Needs NVIDIA GPU with 16GB+ VRAM |
+| **Google Gemini API** | Optional | Free tier available | Cloud fallback — disabled by default. Enable if you don't have a GPU |
+| **OpenAI API** | Optional | Pay-per-use | Cloud fallback — disabled by default |
 
-**You do NOT need all three.** The system tries them in order (GPU → Gemini → OpenAI) and uses whichever is available.
+**Minimum to get started:** Install Ollama and pull a model (see next section). That's it — no API keys, no cloud accounts, no internet needed for LLM calls.
 
-**Minimum to get started:** Just 1 Google Gemini API key (free).
+**Don't have a GPU?** You can re-enable cloud fallbacks (Gemini/OpenAI) in the [Configuration](#configuration) section.
+
+---
+
+## Setting Up Ollama (Local GPU Server)
+
+Ollama is the easiest way to run LLMs locally. It handles downloading models, managing GPU memory, and serving them via an API — all with a single command.
+
+### Install Ollama on Windows
+
+1. Open your web browser and go to: **https://ollama.com/download**
+2. Click the **"Download for Windows"** button
+3. Run the downloaded installer (`OllamaSetup.exe`)
+4. Follow the installer prompts — click **"Next"** through all screens and then **"Install"**
+5. When the installation finishes, click **"Finish"**
+
+Ollama will start automatically and you'll see the Ollama icon (a llama) in your system tray (bottom-right corner of your taskbar, near the clock).
+
+**Verify it installed correctly:** Open a new Command Prompt (`Win + R`, type `cmd`, press Enter) and run:
+
+```cmd
+ollama --version
+```
+
+You should see something like `ollama version 0.6.x`. If you get an error, restart your computer and try again.
+
+### Install Ollama on Ubuntu
+
+Open a Terminal (`Ctrl + Alt + T`) and run:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+This downloads and installs Ollama. When it finishes, verify:
+
+```bash
+ollama --version
+```
+
+Ollama runs as a system service on Ubuntu. It starts automatically after install. You can check its status:
+
+```bash
+systemctl status ollama
+```
+
+If it's not running:
+```bash
+sudo systemctl start ollama
+sudo systemctl enable ollama
+```
+
+### Pull a Model
+
+Now you need to download a model. This is a one-time download — the model is cached locally.
+
+**For machines with 16GB+ GPU VRAM (recommended):**
+
+```bash
+ollama pull llama3.1:70b
+```
+
+This downloads a 70-billion parameter model (~40 GB download). It gives the best quality results.
+
+**For machines with 8GB GPU VRAM:**
+
+```bash
+ollama pull llama3.1:8b
+```
+
+This downloads an 8-billion parameter model (~4.7 GB download). Lighter but still good.
+
+**For machines with 6GB GPU VRAM or CPU-only (no dedicated GPU):**
+
+```bash
+ollama pull llama3.2:3b
+```
+
+This downloads a 3-billion parameter model (~2 GB download). Fastest, works even without a GPU (will use CPU, but slower).
+
+**Not sure which to pick?** Start with `llama3.1:8b` — it's a good balance of quality and speed, and works on most modern laptops with a dedicated GPU.
+
+You can see which models you have installed:
+
+```bash
+ollama list
+```
+
+### Verify Ollama Is Running
+
+Run this command to confirm Ollama's API is responding:
+
+**Windows:**
+```cmd
+curl http://localhost:11434/v1/models
+```
+
+**Ubuntu:**
+```bash
+curl http://localhost:11434/v1/models
+```
+
+You should see a JSON response listing your installed models. If you see `Connection refused`, Ollama isn't running — check the system tray (Windows) or run `sudo systemctl start ollama` (Ubuntu).
+
+### Configure CoPawClaw to Use Your Model
+
+After pulling a model, update your `.env` file so `MAIN_MODEL` matches the model name exactly:
+
+```env
+# If you pulled llama3.1:70b
+MAIN_MODEL=llama3.1:70b
+
+# If you pulled llama3.1:8b
+MAIN_MODEL=llama3.1:8b
+
+# If you pulled llama3.2:3b
+MAIN_MODEL=llama3.2:3b
+```
+
+The model name in `.env` must **exactly match** what `ollama list` shows.
+
+### Ollama Quick Reference
+
+| Command | What It Does |
+|---------|-------------|
+| `ollama pull <model>` | Download a model |
+| `ollama list` | List installed models |
+| `ollama rm <model>` | Delete a model to free disk space |
+| `ollama run <model>` | Chat with a model directly (for testing) |
+| `ollama serve` | Manually start the Ollama server (usually not needed — it auto-starts) |
+| `ollama ps` | Show currently loaded/running models |
+| `ollama show <model>` | Show model details (size, parameters, etc.) |
+
+### Using vLLM Instead of Ollama (Advanced)
+
+If you need higher throughput for production deployments with multiple concurrent users, use vLLM instead:
+
+```bash
+pip install vllm
+vllm serve gpt-oss-20b --port 11434 --max-model-len 32768 --gpu-memory-utilization 0.9
+```
+
+vLLM serves on the same port (11434) with the same OpenAI-compatible API, so no other changes are needed. Set `MAIN_MODEL` in `.env` to match the model name you pass to vLLM.
+
+### Running Ollama on a Separate GPU Server
+
+If your GPU machine is different from the machine running CoPawClaw (common in organizations):
+
+1. Install Ollama on the GPU machine
+2. Configure Ollama to listen on all interfaces:
+
+   **Ubuntu (GPU server):**
+   ```bash
+   sudo systemctl edit ollama
+   ```
+   Add these lines:
+   ```
+   [Service]
+   Environment="OLLAMA_HOST=0.0.0.0:11434"
+   ```
+   Then restart:
+   ```bash
+   sudo systemctl restart ollama
+   ```
+
+   **Windows (GPU server):**
+   Set a system environment variable:
+   - Press `Win + R`, type `sysdm.cpl`, press Enter
+   - Go to **Advanced** tab → **Environment Variables**
+   - Under **System variables**, click **New**
+   - Variable name: `OLLAMA_HOST`
+   - Variable value: `0.0.0.0:11434`
+   - Click OK, then restart Ollama (right-click system tray icon → Quit, then reopen)
+
+3. On the CoPawClaw machine, update `.env` to point to the GPU server's IP:
+   ```env
+   MAIN_MODEL=llama3.1:70b
+   QUERY_URL=http://192.168.1.50:11434
+   LOCAL_BASE_URL=http://192.168.1.50
+   ```
+   Replace `192.168.1.50` with your GPU server's actual IP address.
+
+4. Verify connectivity from the CoPawClaw machine:
+   ```bash
+   curl http://192.168.1.50:11434/v1/models
+   ```
 
 ---
 
@@ -437,26 +624,48 @@ SMTP_USE_TLS=true
 
 ## Configuration
 
-### Minimum `.env` Configuration
+### Minimum `.env` Configuration (GPU-Only — Default)
 
-If you just want to get started quickly, you only need this in your `.env` file:
+If you have Ollama running with a model pulled, this is all you need:
 
 ```env
-# Just one Gemini key is enough to start
-API_KEY_1=AIzaSyYourGeminiKeyHere
+# Set this to the exact model name from 'ollama list'
+MAIN_MODEL=llama3.1:8b
+QUERY_URL=http://localhost:11434
+LOCAL_BASE_URL=http://localhost
+REMOTE_GPU=false
 
-# Leave everything else as default
-MAIN_MODEL=gpt-oss-20b
+# Cloud keys — leave empty for GPU-only mode (no data leaves your machine)
+API_KEY_1=
 OPENAI_API=
+GITHUB_TOKEN=
+```
+
+### `.env` Configuration (Cloud Fallback Mode)
+
+If you don't have a GPU and want to use cloud APIs instead:
+
+```env
+MAIN_MODEL=gpt-oss-20b
+
+# Fill in at least one Gemini key (free tier)
+API_KEY_1=AIzaSyYourGeminiKeyHere
 API_KEY_2=
 API_KEY_3=
 API_KEY_4=
 API_KEY_5=
 API_KEY_6=
-GITHUB_TOKEN=
+
+# Optional OpenAI fallback
+OPENAI_API=sk-YourOpenAIKeyHere
+GITHUB_TOKEN=ghp_YourGitHubToken
 ```
 
-The system will automatically skip GPU (not available) and use Gemini for all LLM calls.
+Then enable cloud fallbacks in `enterprise_skills_lib/constants.py`:
+```python
+"FALLBACK_TO_GEMINI": True,
+"FALLBACK_TO_OPENAI": True,
+```
 
 ### Feature Switches
 
@@ -464,8 +673,11 @@ You can enable/disable specific features by editing `enterprise_skills_lib/const
 
 ```python
 SWITCHES = {
-    "FALLBACK_TO_GEMINI": True,    # Use Gemini as fallback (set False if no Gemini key)
-    "FALLBACK_TO_OPENAI": True,    # Use OpenAI as fallback (set False if no OpenAI key)
+    # LLM fallback chain — both False = GPU-only, no remote calls
+    "FALLBACK_TO_GEMINI": False,   # Set True to enable Gemini cloud fallback
+    "FALLBACK_TO_OPENAI": False,   # Set True to enable OpenAI cloud fallback
+
+    # Skills
     "TECH_SENSING": True,          # Enable tech sensing skill
     "COMPETITIVE_INTEL": True,     # Enable competitive intel skill
     "PATENT_MONITOR": True,        # Enable patent monitor skill
@@ -1039,11 +1251,25 @@ Install CoPaw:
 pip install copaw
 ```
 
+### "GPU-only mode: all attempts against local GPU server failed"
+
+This means Ollama (or vLLM) is not reachable. Check:
+
+1. **Is Ollama running?**
+   - **Windows:** Look for the llama icon in your system tray. If not there, search for "Ollama" in the Start menu and open it
+   - **Ubuntu:** Run `sudo systemctl start ollama`
+2. **Is a model loaded?** Run `ollama list` — you need at least one model pulled
+3. **Does `MAIN_MODEL` in `.env` match?** The model name must exactly match what `ollama list` shows (e.g., `llama3.1:8b`, not `llama3.1`)
+4. **Is the port correct?** Run `curl http://localhost:11434/v1/models` — you should get a JSON response
+5. **Is another process using port 11434?**
+   - **Windows:** `netstat -ano | findstr :11434`
+   - **Ubuntu:** `lsof -i :11434`
+
 ### "All fallback attempts failed (GPU + Gemini + OpenAI)"
 
-This means none of your LLM backends are working. Check:
+This means no LLM backend is working. In GPU-only mode (default), check the Ollama troubleshooting above. If you've enabled cloud fallbacks, also check:
 
-1. **Gemini keys:** Is `API_KEY_1` set correctly in `.env`? Try creating a new key at https://aistudio.google.com/apikey
+1. **Gemini keys:** Is `API_KEY_1` set correctly in `.env`?
 2. **OpenAI key:** Is `OPENAI_API` set correctly in `.env`?
 3. **Internet connection:** Can you access https://google.com from your machine?
 
@@ -1107,19 +1333,25 @@ The Gemini free tier has rate limits. Solutions:
 ## FAQ
 
 **Q: Do I need a GPU?**
-No. The system falls back to cloud APIs (Gemini, OpenAI) automatically. A GPU just makes it faster and free to run.
+Recommended but not required. By default, the platform runs in GPU-only mode using Ollama. If you don't have a GPU, you can either: (a) use Ollama in CPU mode (slower but works), or (b) re-enable cloud fallbacks (Gemini/OpenAI) in `constants.py`.
 
 **Q: How much does it cost to run?**
-With Gemini free tier: $0. With OpenAI: ~$0.01-0.05 per skill run. With a local GPU: $0 after hardware cost.
+With Ollama (local GPU or CPU): $0. With Gemini free tier: $0. With OpenAI: ~$0.01-0.05 per skill run.
 
 **Q: Can I use it without internet?**
-Not currently. The skills fetch articles from the web (RSS, DuckDuckGo, arXiv, GitHub, Hacker News) and use cloud LLM APIs. With a local GPU and local data, it could work offline in principle.
+The LLM calls are fully local by default (Ollama). However, the skills themselves fetch articles from the web (RSS, DuckDuckGo, arXiv, GitHub, Hacker News), so internet is needed for data ingestion. If you provide your own data files, the LLM analysis can run fully air-gapped.
+
+**Q: Which Ollama model should I use?**
+- `llama3.1:70b` — Best quality, needs 16GB+ VRAM
+- `llama3.1:8b` — Good balance, needs 8GB VRAM (recommended starting point)
+- `llama3.2:3b` — Fastest, works on CPU, lower quality
+- `qwen2.5:32b` — Great for structured JSON output, needs 16GB+ VRAM
 
 **Q: How do I add my own RSS feeds?**
 Edit `enterprise_skills_lib/sensing/config.py` and add URLs to `GENERAL_RSS_FEEDS` or `DOMAIN_RSS_FEEDS`.
 
 **Q: Can I change the LLM model?**
-Yes. Edit `MAIN_MODEL` in your `.env` file and the corresponding `FALLBACK_GEMINI_MODEL`/`FALLBACK_OPENAI_MODEL` in `enterprise_skills_lib/constants.py`.
+Yes. Pull a new model with `ollama pull <model-name>`, then update `MAIN_MODEL` in your `.env` file to match. Run `ollama list` to see available model names.
 
 **Q: Where are reports saved?**
 In the `data/{user_id}/{skill_name}/` folder. Each report is a JSON file named `report_{tracking_id}.json`.

@@ -16,9 +16,9 @@ class GPULLMConfig(BaseModel):
 
 # Feature switches — control fallback behavior and skill enablement
 SWITCHES = {
-    # LLM fallback chain
-    "FALLBACK_TO_GEMINI": True,
-    "FALLBACK_TO_OPENAI": True,
+    # LLM fallback chain — set both to False for GPU-only (no remote calls)
+    "FALLBACK_TO_GEMINI": False,
+    "FALLBACK_TO_OPENAI": False,
     "USE_INTERNAL": settings.USE_INTERNAL,
     "REMOTE_GPU": settings.REMOTE_GPU,
     "DISABLE_THINKING": True,

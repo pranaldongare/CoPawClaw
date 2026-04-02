@@ -60,7 +60,9 @@ class FallbackProvider(Provider):
     """
 
     async def check_connection(self, timeout: float = 5) -> Tuple[bool, str]:
-        """Verify that at least one backend in the chain is reachable."""
+        """Verify that the GPU backend is reachable."""
+        from enterprise_skills_lib.constants import SWITCHES
+
         try:
             import httpx
             async with httpx.AsyncClient(timeout=timeout) as client:
@@ -69,17 +71,27 @@ class FallbackProvider(Provider):
                     return True, "GPU server is reachable"
         except Exception:
             pass
-        # GPU is down but Gemini/OpenAI might work
+
+        gpu_only = not SWITCHES.get("FALLBACK_TO_GEMINI") and not SWITCHES.get("FALLBACK_TO_OPENAI")
+        if gpu_only:
+            return False, (
+                "GPU server is unreachable and cloud fallbacks are disabled. "
+                "Start your vLLM/Ollama server on port {PORT1}."
+            )
         return True, "GPU unreachable, but cloud fallbacks available"
 
     async def fetch_models(self, timeout: float = 5) -> List[ModelInfo]:
         """Return the models our chain supports."""
-        return [
-            ModelInfo(id=GPU_SENSING_CLASSIFY_LLM.model, name="Sensing Classify Model"),
-            ModelInfo(id=GPU_SENSING_REPORT_LLM.model, name="Sensing Report Model"),
-            ModelInfo(id="gemini-2.5-flash", name="Gemini 2.5 Flash (fallback)"),
-            ModelInfo(id="gpt-4o-mini", name="OpenAI GPT-4o Mini (fallback)"),
+        from enterprise_skills_lib.constants import SWITCHES
+
+        models = [
+            ModelInfo(id=GPU_SENSING_CLASSIFY_LLM.model, name="GPU Model (local)"),
         ]
+        if SWITCHES.get("FALLBACK_TO_GEMINI"):
+            models.append(ModelInfo(id="gemini-2.5-flash", name="Gemini 2.5 Flash (fallback)"))
+        if SWITCHES.get("FALLBACK_TO_OPENAI"):
+            models.append(ModelInfo(id="gpt-4o-mini", name="OpenAI GPT-4o Mini (fallback)"))
+        return models
 
     async def check_model_connection(
         self, model_id: str, timeout: float = 5
