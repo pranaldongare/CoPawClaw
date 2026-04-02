@@ -21,8 +21,9 @@ A multi-skill enterprise intelligence platform powered by [CoPaw](https://github
 13. [Running via Docker](#running-via-docker)
 14. [Running Tests](#running-tests)
 15. [Project Structure](#project-structure)
-16. [Troubleshooting](#troubleshooting)
-17. [FAQ](#faq)
+16. [CoPaw Key Paths Reference](#copaw-key-paths-reference)
+17. [Troubleshooting](#troubleshooting)
+18. [FAQ](#faq)
 
 ---
 
@@ -382,7 +383,7 @@ If you see any red error text mentioning `Microsoft Visual C++ 14.0 or greater i
 3. Select **"Desktop development with C++"** and click Install
 4. After installation, run the `pip install` command again
 
-### Step 6: Set up your API keys
+### Step 6: Set up your .env file
 
 1. Copy the example environment file:
    ```cmd
@@ -394,60 +395,127 @@ If you see any red error text mentioning `Microsoft Visual C++ 14.0 or greater i
    notepad .env
    ```
 
-3. Fill in your API keys (see [Getting Your API Keys](#getting-your-api-keys) section below). At minimum, fill in:
+3. Set `MAIN_MODEL` to match the Ollama model you pulled earlier:
+   ```env
+   MAIN_MODEL=gemma3:12b
    ```
-   API_KEY_1=your-gemini-api-key-here
+   (Replace `gemma3:12b` with whatever `ollama list` shows on your system, e.g., `llama3.1:8b`)
+
+4. For GPU-only mode (default), leave the cloud API keys empty:
+   ```env
+   API_KEY_1=
+   OPENAI_API=
    ```
 
-4. Save the file (`Ctrl + S`) and close Notepad.
+5. Save the file (`Ctrl + S`) and close Notepad.
 
-### Step 7: Set up CoPaw
+### Step 7: Set up CoPaw and install skills
+
+CoPaw is already installed as a dependency (from Step 5). Now we need to:
+- Initialize CoPaw's working directory
+- Configure Ollama as the active LLM provider
+- Copy the 8 enterprise skills so CoPaw can find them
+
+> **Automated option:** You can run the setup script to do all of Steps 7-9 automatically:
+> ```cmd
+> scripts\setup_copaw.bat gemma3:12b
+> ```
+> Replace `gemma3:12b` with your model name. If it succeeds, skip to [Running the Platform](#running-the-platform).
+
+**If you prefer to do it manually, follow steps 7a through 7e below.**
+
+**7a. Initialize CoPaw:**
 
 ```cmd
-pip install copaw
 copaw init
 ```
 
-During `copaw init`, when it asks for an LLM provider, **select Ollama** (it is available as a built-in provider). Configure it to point to your local Ollama server at `http://localhost:11434` and set the model to match what you pulled earlier (e.g., `llama3.1:8b` or the model name shown by `ollama list`).
+When prompted:
+1. **Accept the security warning** (type `y` or press Enter)
+2. **Select Ollama** as the LLM provider
+3. Set the model name to match what you pulled (e.g., `gemma3:12b`)
 
-This creates a `%USERPROFILE%\.copaw\` folder with CoPaw's configuration.
+This creates two directories:
+- `%USERPROFILE%\.copaw\` — CoPaw configuration, skills, sessions
+- `%USERPROFILE%\.copaw.secret\` — Provider API keys and active model config
 
-**7a. Copy the agent configuration** (defines the 3 agents: Analyst, Reporter, Admin):
+**7b. Set Ollama as the active LLM model:**
+
+This is the most critical step. CoPaw stores the active model in `%USERPROFILE%\.copaw.secret\providers\active_model.json` (note: this is `.copaw.secret`, **NOT** `.copaw\.secret`).
+
+Create the file with the correct content:
 
 ```cmd
-copy copaw_config\config.json %USERPROFILE%\.copaw\config.json
+mkdir %USERPROFILE%\.copaw.secret\providers\builtin 2>nul
+mkdir %USERPROFILE%\.copaw.secret\providers\custom 2>nul
+
+echo {"provider_id": "ollama", "model": "gemma3:12b"} > %USERPROFILE%\.copaw.secret\providers\active_model.json
 ```
 
-**7b. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
+Replace `gemma3:12b` with your actual model name.
 
-CoPaw loads skills at runtime from the `default` agent's workspace directory. Copy all 8 skills into the default agent's active skills folder:
-
+**Verify it was set correctly:**
 ```cmd
-rem Copy skills to the default agent's workspace
-mkdir %USERPROFILE%\.copaw\workspaces\default\skills 2>nul
-
-xcopy /E /I skills\tech_sensing %USERPROFILE%\.copaw\workspaces\default\skills\tech_sensing
-xcopy /E /I skills\pptx_gen %USERPROFILE%\.copaw\workspaces\default\skills\pptx_gen
-xcopy /E /I skills\competitive_intel %USERPROFILE%\.copaw\workspaces\default\skills\competitive_intel
-xcopy /E /I skills\patent_monitor %USERPROFILE%\.copaw\workspaces\default\skills\patent_monitor
-xcopy /E /I skills\regulation_tracker %USERPROFILE%\.copaw\workspaces\default\skills\regulation_tracker
-xcopy /E /I skills\talent_radar %USERPROFILE%\.copaw\workspaces\default\skills\talent_radar
-xcopy /E /I skills\executive_brief %USERPROFILE%\.copaw\workspaces\default\skills\executive_brief
-xcopy /E /I skills\email_digest %USERPROFILE%\.copaw\workspaces\default\skills\email_digest
+type %USERPROFILE%\.copaw.secret\providers\active_model.json
 ```
 
-**7c. Verify skills are loaded:**
-
-Restart CoPaw, then check:
-
-```cmd
-copaw skills list
+Should show:
+```json
+{"provider_id": "ollama", "model": "gemma3:12b"}
 ```
 
-You should see all 8 skills listed. You can also enable/disable skills interactively:
+You can also verify via CoPaw CLI:
+```cmd
+copaw models list
+```
+The bottom of the output should show:
+```
+  Active Model Slot
+  LLM             : ollama / gemma3:12b
+```
+
+**7c. Copy the custom FallbackProvider config:**
+
+This config is used by `enterprise_skills_lib` for direct skill script execution:
 
 ```cmd
-copaw skills config
+copy copaw_config\providers\fallback.json %USERPROFILE%\.copaw.secret\providers\custom\fallback.json
+```
+
+**7d. Install the 8 enterprise skills into CoPaw:**
+
+Skills must be copied to `%USERPROFILE%\.copaw\active_skills\`. On the first launch of `copaw app`, CoPaw automatically migrates these into the default agent's workspace.
+
+> **IMPORTANT:** The correct path is `active_skills\`, NOT `workspaces\default\skills\`. CoPaw handles the workspace migration itself.
+
+```cmd
+xcopy /E /I /Y skills\tech_sensing %USERPROFILE%\.copaw\active_skills\tech_sensing
+xcopy /E /I /Y skills\pptx_gen %USERPROFILE%\.copaw\active_skills\pptx_gen
+xcopy /E /I /Y skills\competitive_intel %USERPROFILE%\.copaw\active_skills\competitive_intel
+xcopy /E /I /Y skills\patent_monitor %USERPROFILE%\.copaw\active_skills\patent_monitor
+xcopy /E /I /Y skills\regulation_tracker %USERPROFILE%\.copaw\active_skills\regulation_tracker
+xcopy /E /I /Y skills\talent_radar %USERPROFILE%\.copaw\active_skills\talent_radar
+xcopy /E /I /Y skills\executive_brief %USERPROFILE%\.copaw\active_skills\executive_brief
+xcopy /E /I /Y skills\email_digest %USERPROFILE%\.copaw\active_skills\email_digest
+```
+
+**7e. Verify skills are installed:**
+
+Check the files are in place:
+```cmd
+dir %USERPROFILE%\.copaw\active_skills\
+```
+
+You should see 8 directories (plus any built-in CoPaw skills like `pdf`, `news`, etc.):
+```
+competitive_intel/
+email_digest/
+executive_brief/
+patent_monitor/
+pptx_gen/
+regulation_tracker/
+talent_radar/
+tech_sensing/
 ```
 
 ### Step 8: Create data directories
@@ -464,7 +532,20 @@ python -c "from enterprise_skills_lib.llm.output_sanitizer import sanitize_llm_j
 python -c "from enterprise_skills_lib.llm.output_schemas.sensing import TechSensingReport; print('Schemas OK')"
 ```
 
-If all three print "OK" messages, you're ready to go! Jump to [Running the Platform](#running-the-platform).
+If all three print "OK" messages, do a final end-to-end check:
+
+```cmd
+rem Check Ollama is running and model is accessible
+curl http://localhost:11434/v1/models
+
+rem Check CoPaw active model
+copaw models list
+
+rem Check the active_model.json content
+type %USERPROFILE%\.copaw.secret\providers\active_model.json
+```
+
+You're ready to go! Jump to [Running the Platform](#running-the-platform).
 
 ---
 
@@ -540,7 +621,7 @@ sudo apt install -y libxml2-dev libxslt1-dev libffi-dev
 pip install -e ".[dev]"
 ```
 
-### Step 6: Set up your API keys
+### Step 6: Set up your .env file
 
 ```bash
 cp .env.example .env
@@ -551,9 +632,16 @@ Open the file in a text editor:
 nano .env
 ```
 
-Fill in your API keys (see [Getting Your API Keys](#getting-your-api-keys) section below). At minimum, fill in:
+Set `MAIN_MODEL` to match the Ollama model you pulled earlier:
+```env
+MAIN_MODEL=gemma3:12b
 ```
-API_KEY_1=your-gemini-api-key-here
+(Replace `gemma3:12b` with whatever `ollama list` shows on your system, e.g., `llama3.1:8b`)
+
+For GPU-only mode (default), leave the cloud API keys empty:
+```env
+API_KEY_1=
+OPENAI_API=
 ```
 
 Save the file:
@@ -561,53 +649,111 @@ Save the file:
 - Press `Enter` to confirm
 - Press `Ctrl + X` to exit nano
 
-### Step 7: Set up CoPaw
+### Step 7: Set up CoPaw and install skills
+
+CoPaw is already installed as a dependency (from Step 5). Now we need to:
+- Initialize CoPaw's working directory
+- Configure Ollama as the active LLM provider
+- Copy the 8 enterprise skills so CoPaw can find them
+
+> **Automated option:** You can run the setup script to do all of Steps 7-9 automatically:
+> ```bash
+> bash scripts/setup_copaw.sh gemma3:12b
+> ```
+> Replace `gemma3:12b` with your model name. If it succeeds, skip to [Running the Platform](#running-the-platform).
+
+**If you prefer to do it manually, follow steps 7a through 7e below.**
+
+**7a. Initialize CoPaw:**
 
 ```bash
-pip install copaw
 copaw init
 ```
 
-During `copaw init`, when it asks for an LLM provider, **select Ollama** (it is available as a built-in provider). Configure it to point to your local Ollama server at `http://localhost:11434` and set the model to match what you pulled earlier (e.g., `llama3.1:8b` or the model name shown by `ollama list`).
+When prompted:
+1. **Accept the security warning** (type `y` or press Enter)
+2. **Select Ollama** as the LLM provider
+3. Set the model name to match what you pulled (e.g., `gemma3:12b`)
 
-This creates a `~/.copaw/` folder with CoPaw's configuration.
+This creates two directories:
+- `~/.copaw/` — CoPaw configuration, skills, sessions
+- `~/.copaw.secret/` — Provider API keys and active model config
 
-**7a. Copy the agent configuration** (defines the 3 agents: Analyst, Reporter, Admin):
+**7b. Set Ollama as the active LLM model:**
+
+This is the most critical step. CoPaw stores the active model in `~/.copaw.secret/providers/active_model.json` (note: this is `.copaw.secret`, **NOT** `.copaw/.secret`).
+
+Create the file with the correct content:
 
 ```bash
-cp copaw_config/config.json ~/.copaw/config.json
+mkdir -p ~/.copaw.secret/providers/builtin
+mkdir -p ~/.copaw.secret/providers/custom
+
+cat > ~/.copaw.secret/providers/active_model.json << 'EOF'
+{
+  "provider_id": "ollama",
+  "model": "gemma3:12b"
+}
+EOF
 ```
 
-**7b. Install skills into CoPaw** (this makes skills appear in the CoPaw Web UI and available to agents):
+Replace `gemma3:12b` with your actual model name in the command above.
 
-CoPaw loads skills at runtime from the `default` agent's workspace directory. Copy all 8 skills into the default agent's active skills folder:
-
+**Verify it was set correctly:**
 ```bash
-# Copy skills to the default agent's workspace
-mkdir -p ~/.copaw/workspaces/default/skills
-
-cp -r skills/tech_sensing ~/.copaw/workspaces/default/skills/
-cp -r skills/pptx_gen ~/.copaw/workspaces/default/skills/
-cp -r skills/competitive_intel ~/.copaw/workspaces/default/skills/
-cp -r skills/patent_monitor ~/.copaw/workspaces/default/skills/
-cp -r skills/regulation_tracker ~/.copaw/workspaces/default/skills/
-cp -r skills/talent_radar ~/.copaw/workspaces/default/skills/
-cp -r skills/executive_brief ~/.copaw/workspaces/default/skills/
-cp -r skills/email_digest ~/.copaw/workspaces/default/skills/
+cat ~/.copaw.secret/providers/active_model.json
 ```
 
-**7c. Verify skills are loaded:**
-
-Restart CoPaw, then check:
-
-```bash
-copaw skills list
+Should show:
+```json
+{
+  "provider_id": "ollama",
+  "model": "gemma3:12b"
+}
 ```
 
-You should see all 8 skills listed. You can also enable/disable skills interactively:
+You can also verify via CoPaw CLI:
+```bash
+copaw models list
+```
+The bottom of the output should show:
+```
+  Active Model Slot
+  LLM             : ollama / gemma3:12b
+```
+
+**7c. Copy the custom FallbackProvider config:**
+
+This config is used by `enterprise_skills_lib` for direct skill script execution:
 
 ```bash
-copaw skills config
+cp copaw_config/providers/fallback.json ~/.copaw.secret/providers/custom/fallback.json
+```
+
+**7d. Install the 8 enterprise skills into CoPaw:**
+
+Skills must be copied to `~/.copaw/active_skills/`. On the first launch of `copaw app`, CoPaw automatically migrates these into the default agent's workspace.
+
+> **IMPORTANT:** The correct path is `active_skills/`, NOT `workspaces/default/skills/`. CoPaw handles the workspace migration itself.
+
+```bash
+for skill in tech_sensing pptx_gen competitive_intel patent_monitor \
+             regulation_tracker talent_radar executive_brief email_digest; do
+    cp -r "skills/$skill" ~/.copaw/active_skills/
+done
+```
+
+**7e. Verify skills are installed:**
+
+Check the files are in place:
+```bash
+ls ~/.copaw/active_skills/
+```
+
+You should see 8 directories (plus any built-in CoPaw skills like `pdf`, `news`, etc.):
+```
+competitive_intel/  executive_brief/  patent_monitor/  regulation_tracker/  tech_sensing/
+email_digest/       pptx_gen/         talent_radar/
 ```
 
 ### Step 8: Create data directories
@@ -624,7 +770,20 @@ python3 -c "from enterprise_skills_lib.llm.output_sanitizer import sanitize_llm_
 python3 -c "from enterprise_skills_lib.llm.output_schemas.sensing import TechSensingReport; print('Schemas OK')"
 ```
 
-If all three print "OK" messages, you're ready to go!
+If all three print "OK" messages, do a final end-to-end check:
+
+```bash
+# Check Ollama is running and model is accessible
+curl http://localhost:11434/v1/models
+
+# Check CoPaw active model
+copaw models list
+
+# Check the active_model.json content
+cat ~/.copaw.secret/providers/active_model.json
+```
+
+You're ready to go!
 
 ---
 
@@ -1216,6 +1375,10 @@ CoPawClaw/
 ├── pyproject.toml                  # Python project metadata and dependencies
 ├── README.md                       # This file
 │
+├── scripts/                        # Setup automation scripts
+│   ├── setup_copaw.sh              # One-command setup (Linux/macOS/Git Bash)
+│   └── setup_copaw.bat             # One-command setup (Windows CMD)
+│
 ├── enterprise_skills_lib/          # Shared Python library (the brains)
 │   ├── config.py                   # Environment variable loading
 │   ├── constants.py                # Feature switches, GPU configs
@@ -1295,6 +1458,25 @@ CoPawClaw/
 
 ---
 
+## CoPaw Key Paths Reference
+
+Understanding where CoPaw stores things is critical for troubleshooting:
+
+| What | Windows Path | Ubuntu Path |
+|------|-------------|-------------|
+| **CoPaw config** (channels, agents) | `%USERPROFILE%\.copaw\config.json` | `~/.copaw/config.json` |
+| **Active model config** | `%USERPROFILE%\.copaw.secret\providers\active_model.json` | `~/.copaw.secret/providers/active_model.json` |
+| **Custom provider configs** | `%USERPROFILE%\.copaw.secret\providers\custom\` | `~/.copaw.secret/providers/custom/` |
+| **Built-in provider configs** | `%USERPROFILE%\.copaw.secret\providers\builtin\` | `~/.copaw.secret/providers/builtin/` |
+| **Skills (pre-migration)** | `%USERPROFILE%\.copaw\active_skills\` | `~/.copaw/active_skills/` |
+| **Skills (post-migration)** | `%USERPROFILE%\.copaw\workspaces\default\skills\` | `~/.copaw/workspaces/default/skills/` |
+| **Chat sessions** | `%USERPROFILE%\.copaw\workspaces\default\sessions\` | `~/.copaw/workspaces/default/sessions/` |
+| **Agent workspace** | `%USERPROFILE%\.copaw\workspaces\default\` | `~/.copaw/workspaces/default/` |
+
+> **WARNING:** `~/.copaw.secret/` and `~/.copaw/.secret/` are **different paths**. CoPaw uses `~/.copaw.secret/` (a sibling directory to `~/.copaw/`, not a subdirectory inside it). This is the most common source of setup errors.
+
+---
+
 ## Troubleshooting
 
 ### CoPaw uses the wrong model (e.g., "gpt-5.2" from `copaw init`)
@@ -1346,6 +1528,48 @@ cp -r skills/email_digest ~/.copaw/workspaces/default/skills/
 Then restart `copaw app`. Verify with `copaw skills list`.
 
 You can also add skills directly from the Web UI: go to **Agent** → **Skills** → **Create Skill** or **Import Skill**.
+
+### CoPaw shows "Active Model Slot: openai / gpt-4o-mini" instead of Ollama
+
+The active model config was not set correctly. Fix it:
+
+**Windows:**
+```cmd
+echo {"provider_id": "ollama", "model": "YOUR_MODEL_NAME"} > %USERPROFILE%\.copaw.secret\providers\active_model.json
+```
+
+**Ubuntu:**
+```bash
+cat > ~/.copaw.secret/providers/active_model.json << 'EOF'
+{"provider_id": "ollama", "model": "YOUR_MODEL_NAME"}
+EOF
+```
+
+Replace `YOUR_MODEL_NAME` with the exact name from `ollama list` (e.g., `gemma3:12b`).
+
+**Common mistake:** Writing to `~/.copaw/.secret/` instead of `~/.copaw.secret/` — these are different directories. CoPaw uses `~/.copaw.secret/` (at the same level as `~/.copaw/`, not inside it).
+
+Verify with `copaw models list` — the bottom should show `LLM : ollama / your-model`.
+
+### Skills don't show in CoPaw Web UI
+
+Skills must be in `~/.copaw/active_skills/` (not `~/.copaw/workspaces/default/skills/`). On the first `copaw app` launch, CoPaw auto-migrates them to the workspace.
+
+1. Check skills are in the right place:
+   - **Windows:** `dir %USERPROFILE%\.copaw\active_skills\`
+   - **Ubuntu:** `ls ~/.copaw/active_skills/`
+
+2. If skills are there but still don't show, stop the app and restart it:
+   ```bash
+   copaw shutdown
+   copaw app --host 127.0.0.1 --port 8088
+   ```
+
+3. If you've already launched `copaw app` once (migration already ran), skills need to be in the workspace too:
+   - **Windows:** Copy skills to `%USERPROFILE%\.copaw\workspaces\default\skills\` as well
+   - **Ubuntu:** Copy skills to `~/.copaw/workspaces/default/skills/` as well
+
+4. You can also add skills directly from the Web UI: go to **Agent** → **Skills** → **Create Skill** or **Import Skill**.
 
 ### "ModuleNotFoundError: No module named 'enterprise_skills_lib'"
 
