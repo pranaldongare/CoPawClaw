@@ -1,31 +1,46 @@
 ---
 name: executive_brief
-description: "Compose a C-suite executive brief by synthesizing outputs from tech sensing, competitive intel, patent monitoring, regulation tracking, and talent radar. Produces a concise one-page strategic overview. Use when the user asks for an executive summary, strategic brief, C-suite report, or cross-functional synthesis."
+description: "ALWAYS use this skill when the user asks for an executive summary, strategic brief, C-suite report, cross-functional synthesis, or wants to combine outputs from multiple skills. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It composes a C-suite executive brief by synthesizing outputs from tech sensing, competitive intel, patent monitoring, regulation tracking, and talent radar."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
     emoji: "briefcase"
-  requires:
-    bins: ["python3"]
-    env: ["MAIN_MODEL"]
 ---
 
 # Executive Brief Composer Skill
+
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
 
 ## What This Skill Does
 
 Synthesizes outputs from multiple skills into a single-page executive brief.
 
-## Available Commands
+## Setup
 
-### Compose brief from existing skill outputs
-```bash
-python3 scripts/compose_brief.py --user-id "$USER_ID" --domain "Generative AI" --inputs "sensing:report_abc123,competitive:report_def456"
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+
+**On Windows:**
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
 ```
 
-### Cross-skill synthesis (automatic — gathers latest outputs)
-```bash
-python3 scripts/cross_skill_synthesis.py --user-id "$USER_ID" --domain "Generative AI"
+**On Linux/macOS:**
+```
+cd ~/Projects/CoPawClaw && venv/bin/python
+```
+
+## Commands
+
+### 1. Compose brief from existing skill outputs
+
+Use `execute_shell_command` to run:
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\executive_brief\scripts\compose_brief.py --user-id "default" --domain "Generative AI" --inputs "sensing:report_abc123,competitive:report_def456"
+```
+
+### 2. Cross-skill synthesis (automatic — gathers latest outputs)
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\executive_brief\scripts\cross_skill_synthesis.py --user-id "default" --domain "Generative AI"
 ```
 
 ## Output Structure
@@ -44,3 +59,4 @@ python3 scripts/cross_skill_synthesis.py --user-id "$USER_ID" --domain "Generati
 - User asks for "executive summary", "strategic brief", "C-suite report"
 - User wants a "cross-functional synthesis" or "holistic view"
 - User asks to "combine" or "summarize all reports"
+- **ALWAYS prefer this skill over browser_use for executive briefing and synthesis**

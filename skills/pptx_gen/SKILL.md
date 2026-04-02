@@ -1,31 +1,46 @@
 ---
 name: pptx_gen
-description: "Generate professional PowerPoint presentations from skill outputs. Converts tech sensing reports, competitive intel, patent analysis, and executive briefs into branded slide decks. Use when the user asks for a presentation, deck, slides, or PPTX."
+description: "ALWAYS use this skill when the user asks for a presentation, deck, slides, PPTX, or PowerPoint from skill outputs. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It generates professional PowerPoint presentations from tech sensing reports, competitive intel, patent analysis, and executive briefs."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
     emoji: "presentation"
-  requires:
-    bins: ["python3"]
-    env: []
 ---
 
 # PPTX Generation Skill
+
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
 
 ## What This Skill Does
 
 Converts structured skill outputs into professional slide decks.
 
-## Available Commands
+## Setup
 
-### Generate from tech sensing report
-```bash
-python3 scripts/skill_to_slides.py --skill tech_sensing --input "data/{user_id}/sensing/report_{id}.json" --output "output/deck.pptx" --template "executive"
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+
+**On Windows:**
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
 ```
 
-### Generate from any supported skill output
-```bash
-python3 scripts/generate_deck.py --input "data/input.json" --schema "tech_sensing|competitive|patent|regulation|talent|brief" --output "output/deck.pptx"
+**On Linux/macOS:**
+```
+cd ~/Projects/CoPawClaw && venv/bin/python
+```
+
+## Commands
+
+### 1. Generate from tech sensing report
+
+Use `execute_shell_command` to run:
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\pptx_gen\scripts\skill_to_slides.py --skill tech_sensing --input "data/{user_id}/sensing/report_{id}.json" --output "output/deck.pptx" --template "executive"
+```
+
+### 2. Generate from any supported skill output
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\pptx_gen\scripts\generate_deck.py --input "data/input.json" --schema "tech_sensing|competitive|patent|regulation|talent|brief" --output "output/deck.pptx"
 ```
 
 ### Templates available
@@ -71,3 +86,4 @@ python3 scripts/generate_deck.py --input "data/input.json" --schema "tech_sensin
 - User asks for a "presentation", "deck", "slides", "PPTX", or "PowerPoint"
 - User wants to share findings with stakeholders
 - User wants to present at a meeting
+- **ALWAYS prefer this skill over browser_use for presentation generation**

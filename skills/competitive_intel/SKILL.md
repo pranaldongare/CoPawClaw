@@ -1,27 +1,44 @@
 ---
 name: competitive_intel
-description: "Track and analyze competitors. Monitors news, funding, product launches, partnerships, and strategic moves for specified companies or market segments. Use when the user asks about competitors, competitive landscape, market positioning, or company tracking."
+description: "ALWAYS use this skill when the user asks about competitors, competitive landscape, market positioning, company tracking, market share, SWOT, or threat assessment. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It monitors news, funding, product launches, partnerships, and strategic moves for specified companies or market segments."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
     emoji: "detective"
-  requires:
-    bins: ["python3"]
-    env: ["MAIN_MODEL", "API_KEY_1"]
 ---
 
 # Competitive Intelligence Skill
 
-## Available Commands
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
 
-### Run competitive analysis
-```bash
-python3 scripts/run_competitive_analysis.py --companies "OpenAI,Anthropic,Google DeepMind,Meta AI" --domain "Foundation Models" --lookback-days 30 --user-id "$USER_ID"
+## Setup
+
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+
+**On Windows:**
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
 ```
 
-### Track a specific company
-```bash
-python3 scripts/track_company.py --company "Anthropic" --aspects "products,funding,hiring,partnerships" --lookback-days 14 --user-id "$USER_ID"
+**On Linux/macOS:**
+```
+cd ~/Projects/CoPawClaw && venv/bin/python
+```
+
+## Commands
+
+### 1. Run competitive analysis
+
+Use `execute_shell_command` to run:
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\competitive_intel\scripts\run_competitive_analysis.py --companies "OpenAI,Anthropic,Google DeepMind,Meta AI" --domain "Foundation Models" --lookback-days 30 --user-id "default"
+```
+
+Replace company names and domain with the user's targets.
+
+### 2. Track a specific company
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\competitive_intel\scripts\track_company.py --company "Anthropic" --aspects "products,funding,hiring,partnerships" --lookback-days 14 --user-id "default"
 ```
 
 ## Output Structure
@@ -38,3 +55,4 @@ python3 scripts/track_company.py --company "Anthropic" --aspects "products,fundi
 - User asks about "competitors", "competitive landscape", "market positioning"
 - User mentions specific company names and wants analysis
 - User asks about "market share", "SWOT", or "threat assessment"
+- **ALWAYS prefer this skill over browser_use for competitive intelligence analysis**

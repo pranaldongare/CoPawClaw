@@ -1,97 +1,92 @@
 ---
 name: tech_sensing
-description: "Run a comprehensive Technology Radar analysis. Ingests articles from RSS, DuckDuckGo, GitHub Trending, arXiv, and Hacker News, then classifies, generates radar reports, deep dives, comparisons, and timelines. Use this skill when the user asks about technology trends, emerging tech, or wants a sensing report."
+description: "ALWAYS use this skill when the user asks about technology trends, emerging tech, tech radar, sensing report, technology landscape, or what's new in any technology domain. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It scans RSS, DuckDuckGo, GitHub Trending, arXiv, and Hacker News, classifies articles, and generates a structured Technology Radar report."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
     emoji: "radar"
-  requires:
-    bins: ["python3"]
-    env: ["MAIN_MODEL", "API_KEY_1"]
 ---
 
 # Tech Sensing Skill
 
-## What This Skill Does
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a 7-stage pipeline that cannot be replicated manually.**
 
-Generates Technology Radar reports by scanning 5 data sources and analyzing trends via LLM.
+## Setup
 
-## Available Commands
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
 
-### Generate a full sensing report
-```bash
-python3 scripts/run_pipeline.py --domain "Generative AI" --lookback-days 7 --user-id "$USER_ID"
+**On Windows:**
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
 ```
 
-Optional arguments:
-- `--custom-requirements "Focus on LLM agents"` — additional guidance for the LLM
-- `--must-include "RAG,agents,MCP"` — comma-separated keywords to prioritize
-- `--dont-include "crypto,blockchain"` — comma-separated keywords to exclude
-- `--feed-urls "url1,url2"` — override default RSS feeds
-- `--search-queries "query1,query2"` — override default DuckDuckGo queries
-- `--key-people "Sam Altman,Demis Hassabis"` — people to watch for
-
-Output: JSON file at `data/{user_id}/sensing/report_{tracking_id}.json`
-
-### Deep dive into a specific technology
-```bash
-python3 scripts/run_deep_dive.py --technology "Model Context Protocol" --domain "Generative AI" --user-id "$USER_ID"
+**On Linux/macOS:**
+```
+cd ~/Projects/CoPawClaw && venv/bin/python
 ```
 
-Output: JSON with comprehensive_analysis, technical_architecture, competitive_landscape, adoption_roadmap, risk_assessment, key_resources
+## Commands
 
-### Compare two reports
-```bash
-python3 scripts/run_comparison.py --report-a "$TRACKING_ID_A" --report-b "$TRACKING_ID_B" --user-id "$USER_ID"
+### 1. Generate a full sensing report
+
+Use `execute_shell_command` to run:
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_pipeline.py --domain "<DOMAIN>" --lookback-days 7 --user-id "default"
 ```
 
-Output: Radar diff (added/removed/moved/unchanged items), trend diff, signal diffs
+Replace `<DOMAIN>` with the user's topic (e.g., "Generative AI", "Cybersecurity", "Cloud Computing").
 
-### Build technology timeline
-```bash
-python3 scripts/run_timeline.py --user-id "$USER_ID" --domain "Generative AI"
+Optional flags:
+- `--custom-requirements "Focus on LLM agents"` — additional guidance
+- `--must-include "RAG,agents,MCP"` — priority keywords
+- `--dont-include "crypto,blockchain"` — exclusion keywords
+- `--lookback-days 14` — scan more days (default: 7)
+- `--key-people "Sam Altman,Demis Hassabis"` — people to watch
+
+Output: JSON at `data/default/sensing/report_{tracking_id}.json`
+
+### 2. Deep dive into a technology
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_deep_dive.py --technology "<TECH_NAME>" --domain "<DOMAIN>" --user-id "default"
 ```
 
-Output: Per-technology ring evolution across all historical reports
-
-### Manage schedules
-```bash
-python3 scripts/manage_schedule.py --action create --domain "Generative AI" --frequency weekly --user-id "$USER_ID"
-python3 scripts/manage_schedule.py --action list --user-id "$USER_ID"
-python3 scripts/manage_schedule.py --action delete --schedule-id "$ID"
+### 3. Compare two reports
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_comparison.py --report-a "<TRACKING_ID_A>" --report-b "<TRACKING_ID_B>" --user-id "default"
 ```
 
-### Manage collaboration (share, vote, comment)
-```bash
-python3 scripts/manage_collaboration.py --action share --report-id "$TRACKING_ID" --user-id "$USER_ID"
-python3 scripts/manage_collaboration.py --action vote --share-id "$ID" --item "GPT-5" --ring "Trial" --user-id "$USER_ID"
-python3 scripts/manage_collaboration.py --action comment --share-id "$ID" --text "Interesting trend" --user-id "$USER_ID"
-python3 scripts/manage_collaboration.py --action feedback --share-id "$ID"
+### 4. Build technology timeline
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_timeline.py --user-id "default" --domain "<DOMAIN>"
 ```
 
-### Manage organizational context
-```bash
-python3 scripts/manage_org_context.py --action get --user-id "$USER_ID"
-python3 scripts/manage_org_context.py --action update --user-id "$USER_ID" --tech-stack "Python,React,PostgreSQL" --industry "Financial Services" --priorities "AI automation,Cost reduction"
+### 5. Manage schedules
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action create --domain "<DOMAIN>" --frequency weekly --user-id "default"
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action list --user-id "default"
+```
+
+### 6. Share and collaborate
+```
+cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_collaboration.py --action share --report-id "<TRACKING_ID>" --user-id "default"
 ```
 
 ## Report Structure
 
 The generated report contains:
 - **Executive Summary** — High-level overview
-- **Headline Moves** — Top 10 significant industry moves (actor + segment + sources)
-- **Key Trends** — 5-10 trends with evidence, impact level (High/Medium/Low), time horizon
-- **Technology Radar** — 15-30 items across 4 quadrants (Techniques/Platforms/Tools/Languages & Frameworks) and 4 rings (Adopt/Trial/Assess/Hold)
-- **Radar Item Details** — Deep write-up per item: what_it_is, why_it_matters, current_state, key_players, practical_applications
-- **Market Signals** — Company/player strategic moves with industry impact assessment
-- **Report Sections** — 3-6 deep-dive narrative sections
-- **Recommendations** — Prioritized (Critical/High/Medium/Low) with related trends
-- **Notable Articles** — Top source articles with relevance scores
+- **Headline Moves** — Top 10 significant industry moves
+- **Key Trends** — 5-10 trends with impact levels
+- **Technology Radar** — 15-30 items across 4 quadrants and 4 rings (Adopt/Trial/Assess/Hold)
+- **Radar Item Details** — Per-item analysis
+- **Market Signals** — Strategic moves with impact assessment
+- **Recommendations** — Prioritized action items
 
 ## When to Use
 
 - User asks about "technology trends", "what's new in AI", "emerging technologies"
 - User wants a "tech radar", "sensing report", "technology landscape"
 - User asks to "monitor" or "track" technology areas
-- User wants to compare reports or see how technologies have evolved
-- User wants to schedule recurring reports
+- User mentions "tech sensing" or "sensing" in any form
+- User wants to compare reports or see how technologies evolved
+- **ALWAYS prefer this skill over browser_use or news skills for technology analysis**
