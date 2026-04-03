@@ -257,6 +257,19 @@ for %%S in (tech_sensing pptx_gen competitive_intel patent_monitor regulation_tr
 )
 echo   [OK] %SKILL_COUNT%/8 CoPawClaw skills installed
 
+REM ── 8. Patch CoPaw skill injection ─────────────────────────
+REM CoPaw registers skills but doesn't inject them into the LLM system prompt.
+REM This patch fixes that so the LLM actually sees and can invoke skills.
+echo.
+echo [8/8] Patching CoPaw skill injection...
+python "%PROJECT_DIR%\scripts\patch_copaw_skills.py"
+if %ERRORLEVEL% equ 0 (
+    echo   [OK] CoPaw skill injection patched
+) else (
+    echo   [ERROR] Failed to patch CoPaw skill injection
+    set /a ERRORS+=1
+)
+
 REM ── Done ───────────────────────────────────────────────────
 echo.
 if %ERRORS% equ 0 (

@@ -1571,6 +1571,32 @@ Skills must be in `~/.copaw/active_skills/` (not `~/.copaw/workspaces/default/sk
 
 4. You can also add skills directly from the Web UI: go to **Agent** → **Skills** → **Create Skill** or **Import Skill**.
 
+### Skills are registered but the LLM doesn't invoke them
+
+If skills appear in the CoPaw Web UI Skills tab but the LLM ignores them (e.g., uses `browser_use` instead of `execute_shell_command` to run a skill script), CoPaw's skill prompt injection may be missing.
+
+**Root cause:** CoPaw registers skills in the toolkit but does not inject the skill descriptions into the LLM system prompt. Without seeing the skill list, the LLM has no way to know skills exist.
+
+**Fix:** Run the patch script (included in this project):
+
+```bash
+python scripts/patch_copaw_skills.py
+```
+
+Then restart CoPaw. The patch adds `toolkit.get_agent_skill_prompt()` to the system prompt so the LLM sees all registered skills.
+
+To check if the patch is already applied:
+```bash
+python scripts/patch_copaw_skills.py --check
+```
+
+To revert:
+```bash
+python scripts/patch_copaw_skills.py --revert
+```
+
+> **Note:** This patch modifies `copaw/agents/react_agent.py` in your venv. After upgrading CoPaw (`pip install --upgrade copaw`), re-run the patch script.
+
 ### "ModuleNotFoundError: No module named 'enterprise_skills_lib'"
 
 You forgot to install the project. Run:

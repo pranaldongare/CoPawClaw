@@ -298,6 +298,18 @@ fi
 SKILL_COUNT=$(ls -d "$SKILLS_DIR"/tech_sensing "$SKILLS_DIR"/competitive_intel "$SKILLS_DIR"/patent_monitor "$SKILLS_DIR"/regulation_tracker "$SKILLS_DIR"/talent_radar "$SKILLS_DIR"/executive_brief "$SKILLS_DIR"/pptx_gen "$SKILLS_DIR"/email_digest 2>/dev/null | wc -l)
 print_ok "$SKILL_COUNT/8 CoPawClaw skills installed in $SKILLS_DIR"
 
+# ── 8. Patch CoPaw skill injection ───────────────────────────────────
+# CoPaw registers skills but doesn't inject them into the LLM system prompt.
+# This patch fixes that so the LLM actually sees and can invoke skills.
+echo ""
+echo -e "${YELLOW}[8/8] Patching CoPaw skill injection...${NC}"
+python "$PROJECT_DIR/scripts/patch_copaw_skills.py"
+if [ $? -eq 0 ]; then
+    print_ok "CoPaw skill injection patched"
+else
+    print_err "Failed to patch CoPaw skill injection"
+fi
+
 # ── Done ─────────────────────────────────────────────────────────────
 echo ""
 if [ "$ERRORS" -eq 0 ]; then
