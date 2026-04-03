@@ -1375,9 +1375,11 @@ CoPawClaw/
 ├── pyproject.toml                  # Python project metadata and dependencies
 ├── README.md                       # This file
 │
-├── scripts/                        # Setup automation scripts
+├── scripts/                        # Setup and patch scripts
 │   ├── setup_copaw.sh              # One-command setup (Linux/macOS/Git Bash)
-│   └── setup_copaw.bat             # One-command setup (Windows CMD)
+│   ├── setup_copaw.bat             # One-command setup (Windows CMD)
+│   ├── patch_copaw_skills.py       # Patch CoPaw to inject skill prompts
+│   └── patch_copaw_timeout.py      # Increase shell command timeout to 1 hour
 │
 ├── enterprise_skills_lib/          # Shared Python library (the brains)
 │   ├── config.py                   # Environment variable loading
@@ -1596,6 +1598,41 @@ python scripts/patch_copaw_skills.py --revert
 ```
 
 > **Note:** This patch modifies `copaw/agents/react_agent.py` in your venv. After upgrading CoPaw (`pip install --upgrade copaw`), re-run the patch script.
+
+### Tech sensing (or other skills) times out before completing
+
+CoPaw's `execute_shell_command` has a default timeout (typically 180-300 seconds) which is too short for skills like tech_sensing that can run for 30-60 minutes. You'll see a timeout error in the logs while the pipeline is still running.
+
+**Fix:** Run the timeout patch script to increase the limit to 1 hour (3600 seconds):
+
+```bash
+python scripts/patch_copaw_timeout.py
+```
+
+To set a custom timeout (e.g., 2 hours):
+```bash
+python scripts/patch_copaw_timeout.py --timeout 7200
+```
+
+To check current timeout values:
+```bash
+python scripts/patch_copaw_timeout.py --check
+```
+
+To revert:
+```bash
+python scripts/patch_copaw_timeout.py --revert
+```
+
+Then restart CoPaw.
+
+> **Note:** This patch modifies files in your venv. After upgrading CoPaw (`pip install --upgrade copaw`), re-run the patch script.
+
+**Alternative — run scripts directly:** If you prefer not to patch CoPaw, run skill scripts directly from the terminal (no CoPaw timeout applies):
+```bash
+source venv/bin/activate
+python skills/tech_sensing/scripts/run_pipeline.py --domain "Generative AI" --lookback-days 7 --user-id default
+```
 
 ### "ModuleNotFoundError: No module named 'enterprise_skills_lib'"
 
