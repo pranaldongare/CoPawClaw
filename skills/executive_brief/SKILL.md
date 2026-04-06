@@ -1,6 +1,6 @@
 ---
 name: executive_brief
-description: "ALWAYS use this skill when the user asks for an executive summary, strategic brief, C-suite report, cross-functional synthesis, or wants to combine outputs from multiple skills. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It composes a C-suite executive brief by synthesizing outputs from tech sensing, competitive intel, patent monitoring, regulation tracking, and talent radar."
+description: "ALWAYS use this skill when the user asks for an executive summary, strategic brief, C-suite report, cross-functional synthesis, or wants to combine outputs from multiple skills. To use: first read_file this skill's SKILL.md for all options, then run via execute_shell_command with timeout 3600: cd /d <COPAWCLAW_DIR> && venv\\Scripts\\python.exe skills\\executive_brief\\scripts\\compose_brief.py --user-id \"default\" --domain \"<DOMAIN>\" --inputs \"<INPUTS>\". Do NOT use browser_use or web search instead."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
@@ -9,7 +9,9 @@ metadata:
 
 # Executive Brief Composer Skill
 
-**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command` with timeout set to 3600 seconds. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
+
+**CRITICAL: On Windows, always use `cd /d <COPAWCLAW_DIR>` (with /d flag) to change to the project directory across drive letters.**
 
 ## What This Skill Does
 
@@ -17,16 +19,16 @@ Synthesizes outputs from multiple skills into a single-page executive brief.
 
 ## Setup
 
-All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Replace `<COPAWCLAW_DIR>` with the actual installation path. Use this prefix for every command:
 
 **On Windows:**
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe
 ```
 
 **On Linux/macOS:**
 ```
-cd ~/Projects/CoPawClaw && venv/bin/python
+cd <COPAWCLAW_DIR> && venv/bin/python
 ```
 
 ## Commands
@@ -35,12 +37,12 @@ cd ~/Projects/CoPawClaw && venv/bin/python
 
 Use `execute_shell_command` to run:
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\executive_brief\scripts\compose_brief.py --user-id "default" --domain "Generative AI" --inputs "sensing:report_abc123,competitive:report_def456"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\executive_brief\scripts\compose_brief.py --user-id "default" --domain "Generative AI" --inputs "sensing:report_abc123,competitive:report_def456"
 ```
 
 ### 2. Cross-skill synthesis (automatic — gathers latest outputs)
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\executive_brief\scripts\cross_skill_synthesis.py --user-id "default" --domain "Generative AI"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\executive_brief\scripts\cross_skill_synthesis.py --user-id "default" --domain "Generative AI"
 ```
 
 ## Output Structure

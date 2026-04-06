@@ -1,6 +1,6 @@
 ---
 name: competitive_intel
-description: "ALWAYS use this skill when the user asks about competitors, competitive landscape, market positioning, company tracking, market share, SWOT, or threat assessment. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It monitors news, funding, product launches, partnerships, and strategic moves for specified companies or market segments."
+description: "ALWAYS use this skill when the user asks about competitors, competitive landscape, market positioning, company tracking, market share, SWOT, or threat assessment. To use: first read_file this skill's SKILL.md for all options, then run via execute_shell_command with timeout 3600: cd /d <COPAWCLAW_DIR> && venv\\Scripts\\python.exe skills\\competitive_intel\\scripts\\run_competitive_analysis.py --companies \"<COMPANIES>\" --domain \"<DOMAIN>\" --lookback-days 30 --user-id \"default\". Do NOT use browser_use or web search instead."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
@@ -9,20 +9,22 @@ metadata:
 
 # Competitive Intelligence Skill
 
-**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command` with timeout set to 3600 seconds. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a multi-stage pipeline that cannot be replicated manually.**
+
+**CRITICAL: On Windows, always use `cd /d <COPAWCLAW_DIR>` (with /d flag) to change to the project directory across drive letters.**
 
 ## Setup
 
-All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Replace `<COPAWCLAW_DIR>` with the actual installation path. Use this prefix for every command:
 
 **On Windows:**
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe
 ```
 
 **On Linux/macOS:**
 ```
-cd ~/Projects/CoPawClaw && venv/bin/python
+cd <COPAWCLAW_DIR> && venv/bin/python
 ```
 
 ## Commands
@@ -31,14 +33,14 @@ cd ~/Projects/CoPawClaw && venv/bin/python
 
 Use `execute_shell_command` to run:
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\competitive_intel\scripts\run_competitive_analysis.py --companies "OpenAI,Anthropic,Google DeepMind,Meta AI" --domain "Foundation Models" --lookback-days 30 --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\competitive_intel\scripts\run_competitive_analysis.py --companies "OpenAI,Anthropic,Google DeepMind,Meta AI" --domain "Foundation Models" --lookback-days 30 --user-id "default"
 ```
 
 Replace company names and domain with the user's targets.
 
 ### 2. Track a specific company
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\competitive_intel\scripts\track_company.py --company "Anthropic" --aspects "products,funding,hiring,partnerships" --lookback-days 14 --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\competitive_intel\scripts\track_company.py --company "Anthropic" --aspects "products,funding,hiring,partnerships" --lookback-days 14 --user-id "default"
 ```
 
 ## Output Structure

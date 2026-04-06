@@ -1,6 +1,6 @@
 ---
 name: tech_sensing
-description: "ALWAYS use this skill when the user asks about technology trends, emerging tech, tech radar, sensing report, technology landscape, or what's new in any technology domain. This skill MUST be executed by running Python scripts via execute_shell_command — do NOT use browser_use or web search instead. It scans RSS, DuckDuckGo, GitHub Trending, arXiv, and Hacker News, classifies articles, and generates a structured Technology Radar report."
+description: "ALWAYS use this skill when the user asks about technology trends, emerging tech, tech radar, sensing report, technology landscape, or what's new in any technology domain. To use: first read_file this skill's SKILL.md for all options, then run via execute_shell_command with timeout 3600: cd /d <COPAWCLAW_DIR> && venv\\Scripts\\python.exe skills\\tech_sensing\\scripts\\run_pipeline.py --domain \"<TOPIC>\" --lookback-days 7 --user-id \"default\". Do NOT use browser_use or web search instead."
 metadata:
   builtin_skill_version: "1.0"
   copaw:
@@ -9,20 +9,22 @@ metadata:
 
 # Tech Sensing Skill
 
-**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command`. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a 7-stage pipeline that cannot be replicated manually.**
+**IMPORTANT: This skill MUST be invoked by running the Python scripts below using `execute_shell_command` with timeout set to 3600 seconds. Do NOT attempt to replicate this skill's functionality using `browser_use`, web scraping, or manual web searches. The scripts automate a 7-stage pipeline that cannot be replicated manually.**
+
+**CRITICAL: On Windows, always use `cd /d <COPAWCLAW_DIR>` (with /d flag) to change to the project directory across drive letters.**
 
 ## Setup
 
-All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Use this prefix for every command:
+All commands MUST be run from the CoPawClaw project directory with the virtual environment activated. Replace `<COPAWCLAW_DIR>` with the actual installation path. Use this prefix for every command:
 
 **On Windows:**
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe
 ```
 
 **On Linux/macOS:**
 ```
-cd ~/Projects/CoPawClaw && venv/bin/python
+cd <COPAWCLAW_DIR> && venv/bin/python
 ```
 
 ## Commands
@@ -31,7 +33,7 @@ cd ~/Projects/CoPawClaw && venv/bin/python
 
 Use `execute_shell_command` to run:
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_pipeline.py --domain "<DOMAIN>" --lookback-days 7 --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\run_pipeline.py --domain "<DOMAIN>" --lookback-days 7 --user-id "default"
 ```
 
 Replace `<DOMAIN>` with the user's topic (e.g., "Generative AI", "Cybersecurity", "Cloud Computing").
@@ -47,28 +49,28 @@ Output: JSON at `data/default/sensing/report_{tracking_id}.json`
 
 ### 2. Deep dive into a technology
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_deep_dive.py --technology "<TECH_NAME>" --domain "<DOMAIN>" --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\run_deep_dive.py --technology "<TECH_NAME>" --domain "<DOMAIN>" --user-id "default"
 ```
 
 ### 3. Compare two reports
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_comparison.py --report-a "<TRACKING_ID_A>" --report-b "<TRACKING_ID_B>" --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\run_comparison.py --report-a "<TRACKING_ID_A>" --report-b "<TRACKING_ID_B>" --user-id "default"
 ```
 
 ### 4. Build technology timeline
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\run_timeline.py --user-id "default" --domain "<DOMAIN>"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\run_timeline.py --user-id "default" --domain "<DOMAIN>"
 ```
 
 ### 5. Manage schedules
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action create --domain "<DOMAIN>" --frequency weekly --user-id "default"
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action list --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action create --domain "<DOMAIN>" --frequency weekly --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_schedule.py --action list --user-id "default"
 ```
 
 ### 6. Share and collaborate
 ```
-cd C:\Users\pranaldongare\Projects\CoPawClaw && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_collaboration.py --action share --report-id "<TRACKING_ID>" --user-id "default"
+cd /d <COPAWCLAW_DIR> && venv\Scripts\python.exe skills\tech_sensing\scripts\manage_collaboration.py --action share --report-id "<TRACKING_ID>" --user-id "default"
 ```
 
 ## Report Structure

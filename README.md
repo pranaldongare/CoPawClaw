@@ -518,6 +518,21 @@ talent_radar/
 tech_sensing/
 ```
 
+**7f. Configure skill paths and enable skills:**
+
+The SKILL.md files use `<COPAWCLAW_DIR>` as a placeholder. Replace it with your actual project path so the agent knows where to find the scripts:
+
+```cmd
+set COPAWCLAW_DIR=%CD%
+for /D %%d in (%USERPROFILE%\.copaw\active_skills\*) do (
+    if exist "%%d\SKILL.md" (
+        powershell -Command "(Get-Content '%%d\SKILL.md') -replace '<COPAWCLAW_DIR>', '%COPAWCLAW_DIR%' | Set-Content '%%d\SKILL.md'"
+    )
+)
+```
+
+After the first `copaw app` launch (which migrates skills to the workspace), enable all enterprise skills — see [Troubleshooting: Skills are installed but disabled](#skills-are-installed-but-disabled-agent-ignores-them).
+
 ### Step 8: Create data directories
 
 ```cmd
@@ -755,6 +770,18 @@ You should see 8 directories (plus any built-in CoPaw skills like `pdf`, `news`,
 competitive_intel/  executive_brief/  patent_monitor/  regulation_tracker/  tech_sensing/
 email_digest/       pptx_gen/         talent_radar/
 ```
+
+**7f. Configure skill paths and enable skills:**
+
+The SKILL.md files use `<COPAWCLAW_DIR>` as a placeholder. Replace it with your actual project path so the agent knows where to find the scripts:
+
+```bash
+COPAWCLAW_DIR="$(pwd)"
+find ~/.copaw/active_skills -name "SKILL.md" \
+  -exec sed -i "s|<COPAWCLAW_DIR>|$COPAWCLAW_DIR|g" {} +
+```
+
+After the first `copaw app` launch (which migrates skills to the workspace), enable all enterprise skills — see [Troubleshooting: Skills are installed but disabled](#skills-are-installed-but-disabled-agent-ignores-them).
 
 ### Step 8: Create data directories
 
@@ -1572,6 +1599,53 @@ Skills must be in `~/.copaw/active_skills/` (not `~/.copaw/workspaces/default/sk
    - **Ubuntu:** Copy skills to `~/.copaw/workspaces/default/skills/` as well
 
 4. You can also add skills directly from the Web UI: go to **Agent** → **Skills** → **Create Skill** or **Import Skill**.
+
+### Skills are installed but disabled (agent ignores them)
+
+After installing skills, CoPaw sets all new skills to `"enabled": false` in the skill manifest (`~/.copaw/workspaces/default/skill.json`). The skills appear in the Web UI but the agent won't use them.
+
+**Fix:** Enable the enterprise skills in the manifest. You can either:
+
+1. **From the Web UI:** Go to **Skills** panel → toggle each skill ON
+2. **From the command line:**
+   ```bash
+   python -c "
+   import json, pathlib
+   p = pathlib.Path.home() / '.copaw' / 'workspaces' / 'default' / 'skill.json'
+   d = json.loads(p.read_text(encoding='utf-8'))
+   for s in ['tech_sensing','competitive_intel','email_digest','executive_brief','patent_monitor','pptx_gen','regulation_tracker','talent_radar']:
+       if s in d.get('skills', {}): d['skills'][s]['enabled'] = True
+   p.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding='utf-8')
+   print('All enterprise skills enabled')
+   "
+   ```
+
+Then restart CoPaw.
+
+### Skill commands reference wrong path (`<COPAWCLAW_DIR>`)
+
+The SKILL.md files use `<COPAWCLAW_DIR>` as a placeholder for the project installation path. When the agent runs a skill, it needs the actual absolute path.
+
+**Fix:** After installing skills, replace the placeholder with your actual project path:
+
+**Windows:**
+```cmd
+cd %USERPROFILE%\.copaw\workspaces\default\skills
+for /D %d in (*) do (
+    if exist "%d\SKILL.md" (
+        powershell -Command "(Get-Content '%d\SKILL.md') -replace '<COPAWCLAW_DIR>', 'C:\Users\YourName\Projects\CoPawClaw' | Set-Content '%d\SKILL.md'"
+    )
+)
+```
+
+**Ubuntu:**
+```bash
+COPAWCLAW_DIR="$HOME/Projects/CoPawClaw"
+find ~/.copaw/workspaces/default/skills -name "SKILL.md" \
+  -exec sed -i "s|<COPAWCLAW_DIR>|$COPAWCLAW_DIR|g" {} +
+```
+
+Replace the path with your actual CoPawClaw installation directory.
 
 ### Skills are registered but the LLM doesn't invoke them
 
